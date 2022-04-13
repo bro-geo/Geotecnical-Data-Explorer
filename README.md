@@ -1,5 +1,5 @@
 <h2> Geotecnical Data Explorer </h2>
-<p>A QGIS plugin that allow to explore data from the geotechnical database. This plugin is also part of the thesis that will be presented in Geotechnical Pós Graduation Program in UnB with the preliminar title: "Banco tridimensional de dados geotécnicos"</p>
+<p>A QGIS plugin that allow to explore data from the geotechnical database implemented by pggeotec PostgreSQL extension. This plugin is also part of the thesis that will be presented in Geotechnical Pós Graduation Program in UnB with the preliminar title: "Banco tridimensional de dados geotécnicos"</p>
 <h3> Dependent resources </h3>
 <ul>
                     <li>Postgres v11.7 + Postgis 3.0.0 (Have to be instaled in de default path.)</li>
