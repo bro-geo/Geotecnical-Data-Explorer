@@ -19,9 +19,6 @@
                             </div>
                             <div id="python-modules-p2">
                                 <li>pathlib</li>
-                                <li>statsmodel 0.11.1</li>
-                                <li>PyKrige 1.5.0</li>
-                                <li>gstools 1.2.1</li>
                                 <li>matplotlib</li>
                                 <li>scipy</li>
                                 <li>mpl_toolkits</li>
@@ -33,7 +30,6 @@
                                 <li>pandas</li>
                                 <li>datetime</li>
                                 <li>warnings</li>
-                                <li>subprocess</li>
                                 <li>shutil</li>
                             </div>
                         </div>
