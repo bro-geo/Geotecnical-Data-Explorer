@@ -11,30 +11,11 @@
                                 <li>numpy 1.17.3</li>
                                 <li>psycopg2 2.8.4</li>
                                 <li>matplotlib 3.0.0</li>
-                                <li>processing</li>
                                 <li>os</li>
                                 <li>builtins</li>
                                 <li>scipy 1.1.0</li>
-                                <li>seabon 0.9.1</li>
-                            </div>
-                            <div id="python-modules-p2">
-                                <li>pathlib</li>
-                                <li>statsmodel 0.11.1</li>
-                                <li>PyKrige 1.5.0</li>
-                                <li>gstools 1.2.1</li>
-                                <li>matplotlib</li>
-                                <li>scipy</li>
-                                <li>mpl_toolkits</li>
-                                <li>builtins</li>
-                            </div>
-                            <div id="python-modules-p3">
-                                <li>sys</li>
-                                <li>sklearn</li>
                                 <li>pandas</li>
-                                <li>datetime</li>
-                                <li>warnings</li>
-                                <li>subprocess</li>
-                                <li>shutil</li>
+                                <li>pathlib</li>
                             </div>
                         </div>
                     </ul>
