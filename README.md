@@ -37,7 +37,7 @@
                 </ul>
 
 <h3> Documentation </h3>
-<p> Online documentation: About on plugin folder.</p>
+<p> Online documentation: It will available.</p>
 <p> License</p>
 <p><b> Copyright (C) 2021 Bruno Rodrigues</b></p>
 
