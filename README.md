@@ -1,5 +1,5 @@
 <h2> Geotecnical Data Explorer </h2>
-<h3> Experimental Plugin - User has to dowloand and copile the necessary libraries </h3>
+<h3> Experimental Plugin - User has to donwload from the develop branch and copile the necessary libraries </h3>
 <p>A QGIS plugin that allow to explore data from the geotechnical database implemented by pggeotec PostgreSQL extension. This plugin is also part of the thesis that will be presented in Geotechnical Pós Graduation Program in UnB with the preliminar title: "Banco de dados geotécnicos tridimensionais (BDGT)"</p>
 <h3> Dependent resources </h3>
 <ul>
