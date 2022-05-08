@@ -30,7 +30,7 @@
     <item>
      <widget class="QTabWidget" name="tabFunctions">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="databaseFunctions">
        <attribute name="title">
@@ -40,7 +40,7 @@
         <item row="1" column="0">
          <widget class="QToolBox" name="toolBoxGeometry">
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="page">
            <property name="geometry">
@@ -464,7 +464,7 @@ p, li { white-space: pre-wrap; }
                 <string>producao</string>
                </property>
                <property name="placeholderText">
-                <string>Database</string>
+                <string>Insert database name</string>
                </property>
               </widget>
              </item>
@@ -474,7 +474,7 @@ p, li { white-space: pre-wrap; }
                 <bool>false</bool>
                </property>
                <property name="text">
-                <string>Edit@r_m6</string>
+                <string>Consultaa1</string>
                </property>
                <property name="echoMode">
                 <enum>QLineEdit::Password</enum>
@@ -499,7 +499,7 @@ p, li { white-space: pre-wrap; }
              <item row="0" column="1">
               <widget class="QLineEdit" name="lineEditLogin">
                <property name="text">
-                <string>edicao_esquema_ic</string>
+                <string>consulta</string>
                </property>
                <property name="placeholderText">
                 <string>Insert your login</string>
@@ -553,30 +553,17 @@ p, li { white-space: pre-wrap; }
              </size>
             </property>
             <property name="title">
-             <string>Create Database</string>
+             <string>Create Database Extension</string>
             </property>
             <layout class="QGridLayout" name="gridLayout_9">
              <item row="0" column="0">
-              <widget class="QLineEdit" name="lineEdit">
-               <property name="maximumSize">
-                <size>
-                 <width>150</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="placeholderText">
-                <string>Insert database name</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
               <widget class="QPushButton" name="pushButtonCreateDatabase">
                <property name="text">
                 <string>Create Extension</string>
                </property>
               </widget>
              </item>
-             <item row="0" column="2">
+             <item row="0" column="1">
               <widget class="QPushButton" name="pushButtonDropExtension">
                <property name="text">
                 <string>Drop Extension</string>
@@ -605,8 +592,8 @@ p, li { white-space: pre-wrap; }
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>472</width>
-             <height>336</height>
+             <width>758</width>
+             <height>762</height>
             </rect>
            </property>
            <attribute name="label">
@@ -774,13 +761,6 @@ p, li { white-space: pre-wrap; }
                       </property>
                      </widget>
                     </item>
-                    <item row="9" column="0">
-                     <widget class="QPushButton" name="pushButtonEcdf">
-                      <property name="text">
-                       <string>ECDF</string>
-                      </property>
-                     </widget>
-                    </item>
                     <item row="0" column="0">
                      <widget class="QPushButton" name="pushButtonStatistics">
                       <property name="text">
@@ -806,6 +786,20 @@ p, li { white-space: pre-wrap; }
                      <widget class="QPushButton" name="pushButtonConfigureDomain">
                       <property name="text">
                        <string>Configure Domain</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="9" column="0">
+                     <widget class="QPushButton" name="pushButtonEcdf">
+                      <property name="text">
+                       <string>ECDF</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="11" column="0">
+                     <widget class="QPushButton" name="pushButtonScatter">
+                      <property name="text">
+                       <string>Scatter</string>
                       </property>
                      </widget>
                     </item>
@@ -866,6 +860,13 @@ p, li { white-space: pre-wrap; }
                   <string>Multiple layers</string>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_30">
+                  <item row="3" column="0">
+                   <widget class="QPushButton" name="pushButtonMultiple">
+                    <property name="text">
+                     <string>Multiple</string>
+                    </property>
+                   </widget>
+                  </item>
                   <item row="1" column="0">
                    <widget class="QGroupBox" name="groupBox_20">
                     <property name="title">
@@ -934,27 +935,13 @@ p, li { white-space: pre-wrap; }
                     </layout>
                    </widget>
                   </item>
-                  <item row="3" column="0">
-                   <widget class="QPushButton" name="pushButtonMultiple">
-                    <property name="text">
-                     <string>Multiple</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="0">
-                   <widget class="QPushButton" name="pushButtonScatter">
-                    <property name="text">
-                     <string>Scatter</string>
-                    </property>
-                   </widget>
-                  </item>
                  </layout>
                 </widget>
                </item>
                <item row="5" column="0" colspan="2">
                 <widget class="QGroupBox" name="groupBox_22">
                  <property name="title">
-                  <string>Tests graphs</string>
+                  <string>Laboratory Tests and Field Measurement Graphs</string>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_32">
                   <item row="0" column="0">
@@ -1010,20 +997,10 @@ p, li { white-space: pre-wrap; }
                <item row="6" column="0" colspan="2">
                 <widget class="QGroupBox" name="groupBox_23">
                  <property name="title">
-                  <string>Others</string>
+                  <string>SPT Graphs</string>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_34">
-                  <item row="2" column="2">
-                   <widget class="QPushButton" name="pushButtondepthWetSPTGenerateGraph">
-                    <property name="enabled">
-                     <bool>true</bool>
-                    </property>
-                    <property name="text">
-                     <string>SPT x Depth (Wet)</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="2">
+                  <item row="4" column="2">
                    <widget class="QPushButton" name="pushButtondepthSPTGenerateGraph">
                     <property name="enabled">
                      <bool>true</bool>
@@ -1033,7 +1010,7 @@ p, li { white-space: pre-wrap; }
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="2">
+                  <item row="5" column="2">
                    <widget class="QPushButton" name="pushButtondepthDrySPTGenerateGraph">
                     <property name="enabled">
                      <bool>true</bool>
@@ -1043,25 +1020,70 @@ p, li { white-space: pre-wrap; }
                     </property>
                    </widget>
                   </item>
-                  <item row="3" column="2">
-                   <widget class="QPushButton" name="pushButton_4">
+                  <item row="6" column="2">
+                   <widget class="QPushButton" name="pushButtondepthWetSPTGenerateGraph">
                     <property name="enabled">
-                     <bool>false</bool>
+                     <bool>true</bool>
+                    </property>
+                    <property name="text">
+                     <string>SPT x Depth (Wet)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="9" column="2">
+                   <widget class="QPushButton" name="pushButtonDepthSPTTexturaGenerateGraph">
+                    <property name="enabled">
+                     <bool>true</bool>
+                    </property>
+                    <property name="text">
+                     <string>Texture x Depth</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="8" column="2">
+                   <widget class="QPushButton" name="pushButtonDepthSPTOriginGenerateGraph">
+                    <property name="enabled">
+                     <bool>true</bool>
                     </property>
                     <property name="text">
                      <string>Geologic origin x Depth</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="4" column="2">
-                   <widget class="QPushButton" name="pushButton_5">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
+                  <item row="0" column="2">
+                   <widget class="QLabel" name="label_26">
                     <property name="text">
-                     <string>Texture x Depth</string>
+                     <string>Feature Layer</string>
                     </property>
                    </widget>
+                  </item>
+                  <item row="3" column="2">
+                   <widget class="QLabel" name="label_27">
+                    <property name="text">
+                     <string>Graphs</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="2">
+                   <widget class="QgsMapLayerComboBox" name="MapLayerComboBoxSPT"/>
+                  </item>
+                  <item row="7" column="2">
+                   <layout class="QHBoxLayout" name="horizontalLayout_5">
+                    <item>
+                     <widget class="QLineEdit" name="lineEditGeociu">
+                      <property name="text">
+                       <string>120III3A11</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="label_28">
+                      <property name="text">
+                       <string>Unique Identifier Code fo graphs belowr </string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
                   </item>
                  </layout>
                 </widget>
@@ -1090,7 +1112,7 @@ p, li { white-space: pre-wrap; }
       </widget>
       <widget class="QWidget" name="queryAnalysis3d">
        <attribute name="title">
-        <string>3D Query an Analysis</string>
+        <string>3D Analysis</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_5">
         <item row="0" column="1">

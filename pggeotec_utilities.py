@@ -22,6 +22,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
@@ -110,27 +111,6 @@ class utilsFunctions:
         except Exception as error:
             print(f'Check getUniqueValuesCount. Reason {error}')
 
-
-    ############################################################################################################################################################################################
-    # Recuperar dominios                                                                      
-    ############################################################################################################################################################################################
-    def recuperarDominios (connection, domain_pk, domain_desc, domain_table, layer_receive_domain, field_to_domain):
-        try:
-            layer = getVectorLayerByName(layer_receive_domain)
-            cursor  = connection.cursor()
-            query = ("SELECT "+domain_desc+","+domain_pk+ "::integer FROM "+domain_table+";")
-            cursor.execute(query)
-            domains = cursor.fetchall()
-            domains_index = layer.fields().indexFromName(field_to_domain)
-            domains = dict(domains)
-            type_config = 'ValueMap'
-            config = {'map' : domains}
-            domains_widget_setup = QgsEditorWidgetSetup(type_config, config)
-            layer.setEditorWidgetSetup(domains_index, domains_widget_setup)
-            connection.commit()
-            cursor.close()
-        except (Exception, psycopg2.Error) as error:
-            print (f'Utilities Functions: Cannot execute this function. Reason: {error}')
     
     ############################################################################################################################################################################################
     # Tratar variáveis                                                                      

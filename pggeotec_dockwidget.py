@@ -23,9 +23,11 @@
 """
 
 import os
+import psycopg2
 
 from qgis.PyQt import QtGui, QtWidgets, uic
 from qgis.PyQt.QtCore import pyqtSignal
+from qgis.core import QgsEditorWidgetSetup
 
 # custom imports
 from .pggeotec_database import databaseFunctions as dbf
@@ -142,6 +144,8 @@ class gdeDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.pushButtondepthWetSPTGenerateGraph.clicked.connect(self.depthWetSPTGenerateGraph)
         self.pushButtondepthDrySPTGenerateGraph.clicked.connect(self.depthDrySPTGenerateGraph)
         self.pushButtondepthSPTGenerateGraph.clicked.connect(self.depthSPTGenerateGraph)
+        self.pushButtonDepthSPTOriginGenerateGraph.clicked.connect(self.depthSPTOriginGenerateGraph)
+        self.pushButtonDepthSPTTexturaGenerateGraph.clicked.connect(self.depthSPTTexturaGenerateGraph)
         self.pushButtonTestGraph.clicked.connect(self.generateTestsGraphs)
 
         # Interpolate 3d
@@ -170,10 +174,19 @@ class gdeDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         
 
 
-        ############################################################################  
-        #### combobox
-        ############################################################################
-
+    ############################################################################  
+    #### combobox
+    ############################################################################
+    def messageBoxCreation(self, message, title):
+        msgBox = QtWidgets.QMessageBox()
+        msgBox.setText(str(message))
+        msgBox.setWindowTitle(str(title))
+        msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
+        return_value = msgBox.exec()
+        if return_value == QtWidgets.QMessageBox.Ok:
+            print('You pressed OK')
+        elif return_value == QtWidgets.QMessageBox.Cancel:
+            print('You pressed Cancel')
 
     ############################################################################  
     #### Database
@@ -649,14 +662,33 @@ class gdeDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     ############################################################################
     #### Combobox
     ############################################################################
+    def recuperarDominios (self, connection, domain_pk, domain_desc, domain_table, layer_receive_domain, field_to_domain):
+        try:
+            layer = utils.getVectorLayerByName(layer_receive_domain)
+            cursor  = connection.cursor()
+            query = "SELECT %s, %s::integer FROM %s;" % (domain_desc, domain_pk, domain_table)
+            cursor.execute(query)
+            domains = cursor.fetchall()
+            domains_index = layer.fields().indexFromName(field_to_domain)
+            domains = dict(domains)
+            type_config = 'ValueMap'
+            config = {'map' : domains}
+            domains_widget_setup = QgsEditorWidgetSetup(type_config, config)
+            layer.setEditorWidgetSetup(domains_index, domains_widget_setup)
+            connection.commit()
+            cursor.close()
+        except (Exception, psycopg2.Error) as error:
+            print ('Utilities Functions: Cannot execute this function. Reason: %s' % (error))
+
     def configureDomain(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
             connection = dbf.connectDatabase(dictConnection)
-            query = ("SELECT esquema, tabela, coluna, tab_dom, chave_tb_dom, col_tb_dom FROM dom.tb_dom_controle WHERE tabela = '%s'" % (table))
+            table = self.layerAnalysisMapLayerComboBox.currentText()
+            query = ("SELECT esquema, tabela, coluna, tab_dom, chave_tb_dom, col_tb_dom FROM dom.tb_controle WHERE tabela = '%s'" % (table)) 
             dataframe = read_sql_query(query, connection)
             for row in range(dataframe.shape[0]):
-                 utils.recuperarDominios (connection, dataframe.loc[row,'chave_tb_dom'], dataframe.loc[row,'col_tb_dom'], dataframe.loc[row,'tab_dom'], dataframe.loc[row,'tabela'], dataframe.loc[row,'coluna'])
+                 self.recuperarDominios (connection, dataframe.loc[row,'chave_tb_dom'], dataframe.loc[row,'col_tb_dom'], dataframe.loc[row,'tab_dom'], dataframe.loc[row,'tabela'], dataframe.loc[row,'coluna'])
             connection.commit()
         except Exception as error:
             print('Check function configureDomain. Cannot execute function. Reason: %s.' % (error))
@@ -724,16 +756,19 @@ class gdeDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.clearPlot()
             layer = utils.getVectorLayerByName(self.layerAnalysisMapLayerComboBox.currentText())
             fieldName = self.field1LayerAnalysisFieldComboBox.currentText()
-            useSelection = self.checkSelection.isChecked()
-            resultData = utils.useSelectionOneVariable(layer, fieldName, useSelection)
-            numberBins = self.configureBins(resultData)
-            self.axes.set_title(self.tr('Histogram of %s' %(fieldName)))
-            self.axes.grid(self.checkShowGrid.isChecked())
-            self.axes.set_xlabel(str(fieldName))
-            self.axes.axes.hist(resultData, bins = numberBins, label = 'Values of %s' % (fieldName))
-            self.axes.set_ylabel('Frequency')
-            self.axes.legend()
-            self.canvas.draw()
+            if fieldName == '':
+                self.messageBoxCreation('One of Fields is not defined or supported.', 'Histogram')
+            else:
+                useSelection = self.checkSelection.isChecked()
+                resultData = utils.useSelectionOneVariable(layer, fieldName, useSelection)
+                numberBins = self.configureBins(resultData)
+                self.axes.set_title(self.tr('Histogram of %s' %(fieldName)))
+                self.axes.grid(self.checkShowGrid.isChecked())
+                self.axes.set_xlabel(str(fieldName))
+                self.axes.axes.hist(resultData, bins = numberBins, label = 'Values of %s' % (fieldName))
+                self.axes.set_ylabel('Frequency')
+                self.axes.legend()
+                self.canvas.draw()
         except Exception as error:
             print('Check function histogram. Cannot execute function. Reason: %s.' % (error))
     
@@ -770,8 +805,15 @@ class gdeDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     def statistics(self):
         try:
             layer, fieldName, useSelection = self.recoverData()
-            statistics = sf.statisticsDescritive(layer, fieldName, useSelection)
-            print(statistics)
+            if fieldName == '':
+                self.messageBoxCreation('One of Fields is not defined or supported.', 'Statistics')
+            else:
+                statistics = sf.statisticsDescritive(layer, fieldName, useSelection)
+                print(statistics)
+                text = 'mean: %s, stddev: %s, median: %s, minimun: %s, maximum: %s, variance: %s, skewness: %s, kurtosis %s, cv: %s, upper_quartile %s, lower_quartile: %s, count: %s' % (statistics['mean'], statistics['stddev'], statistics['median'], statistics['minimun'], statistics['maximum'], statistics['variance'], statistics['skewness'], statistics['kurtosis'], statistics['cv'], statistics['upper_quartile'], statistics['lower_quartile'], statistics['count'])
+                self.messageBoxCreation(str(text), 'Statistics')
+                clipboard = QtWidgets.QApplication.clipboard()
+                clipboard.setText(text)
         except Exception as error:
             print('Check function histogram. Cannot execute function. Reason: %s.' % (error))
 
@@ -781,17 +823,20 @@ class gdeDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             layer = utils.getVectorLayerByName(self.layerAnalysisMapLayerComboBox.currentText())
             fieldName1 = self.field1LayerAnalysisFieldComboBox.currentText()
             fieldName2 = self.field2LayerAnalysisFieldComboBox.currentText()
-            useSelection = self.checkSelection.isChecked()
-            statistics1, statistics2, resultDataOne, resultDataTwo = sf.correlationAnalysis(layer, fieldName1, fieldName2, useSelection)
-            print('%s - %s' % (fieldName1, statistics1))
-            print('%s - %s' % (fieldName2, statistics2))
-            self.axes.set_title(self.tr('Scatterplot of %s and %s' % (fieldName1, fieldName2)))
-            self.axes.grid(self.checkShowGrid.isChecked())
-            self.axes.set_xlabel(str(fieldName1))
-            self.axes.set_ylabel(str(fieldName2))
-            self.axes.plot(resultDataOne, resultDataTwo, "go")
-            self.figure.autofmt_xdate()
-            self.canvas.draw()
+            if fieldName1 == '' or fieldName2 == '':
+                self.messageBoxCreation('One of Fields is not defined or supported.', 'Scatter Plot')
+            else:
+                useSelection = self.checkSelection.isChecked()
+                statistics1, statistics2, resultDataOne, resultDataTwo = sf.correlationAnalysis(layer, fieldName1, fieldName2, useSelection)
+                print('%s - %s' % (fieldName1, statistics1))
+                print('%s - %s' % (fieldName2, statistics2))
+                self.axes.set_title(self.tr('Scatterplot of %s and %s' % (fieldName1, fieldName2)))
+                self.axes.grid(self.checkShowGrid.isChecked())
+                self.axes.set_xlabel(str(fieldName1))
+                self.axes.set_ylabel(str(fieldName2))
+                self.axes.plot(resultDataOne, resultDataTwo, "go")
+                self.figure.autofmt_xdate()
+                self.canvas.draw()
         except Exception as error:
             print('Check function scatterPlot. Cannot execute function. Reason: %s.' % (error))
 
@@ -799,14 +844,17 @@ class gdeDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         try:
             self.clearPlot()
             layer, fieldName, useSelection = self.recoverData()
-            resultData = utils.useSelectionOneVariable(layer, fieldName, useSelection)
-            self.axes.axes.boxplot(resultData, notch= True, bootstrap = 10000)
-            self.axes.set_title(self.tr('BoxPlot of %s.' % (fieldName)))
-            self.axes.grid(self.checkShowGrid.isChecked())
-            self.axes.set_ylabel('Values of %s' % (fieldName))
-            self.axes.set_xlabel('%s' % (fieldName))
-            self.figure.autofmt_xdate()
-            self.canvas.draw()
+            if fieldName == '':
+                self.messageBoxCreation('One of Fields is not defined or supported.', 'BoxPlot')
+            else:
+                resultData = utils.useSelectionOneVariable(layer, fieldName, useSelection)
+                self.axes.axes.boxplot(resultData, notch= True, bootstrap = 10000)
+                self.axes.set_title(self.tr('BoxPlot of %s.' % (fieldName)))
+                self.axes.grid(self.checkShowGrid.isChecked())
+                self.axes.set_ylabel('Values of %s' % (fieldName))
+                self.axes.set_xlabel('%s' % (fieldName))
+                self.figure.autofmt_xdate()
+                self.canvas.draw()
         except Exception as error:
             print('Check function boxPlot. Cannot execute function. Reason: %s.' % (error))
 
@@ -814,17 +862,20 @@ class gdeDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         try:
             self.clearPlot()
             layer, fieldName, useSelection = self.recoverData()
-            posx, posy, osm , osr, slope, intercept, r = sf.qqPlotData(layer, fieldName, useSelection)
-            self.axes.plot(osm, osr, 'o')
-            self.axes.plot(osm, slope*osm + intercept, 'r-',  label = fieldName)
-            self.axes.legend()
-            self.axes.set_title(self.tr('q-q Plot of %s' % (fieldName)))
-            self.axes.grid(self.checkShowGrid.isChecked())
-            self.axes.set_ylabel('Ordered Values (data sample)')
-            self.axes.set_xlabel('Quantiles of Normal Distribution ')
-            self.axes.text(posx, posy, "R^2=%1.4f" % r)
-            self.figure.autofmt_xdate()
-            self.canvas.draw()
+            if fieldName == '':
+                self.messageBoxCreation('One of Fields is not defined or supported.', 'QQPlot')
+            else:
+                posx, posy, osm , osr, slope, intercept, r = sf.qqPlotData(layer, fieldName, useSelection)
+                self.axes.plot(osm, osr, 'o')
+                self.axes.plot(osm, slope*osm + intercept, 'r-',  label = fieldName)
+                self.axes.legend()
+                self.axes.set_title(self.tr('q-q Plot of %s' % (fieldName)))
+                self.axes.grid(self.checkShowGrid.isChecked())
+                self.axes.set_ylabel('Ordered Values (data sample)')
+                self.axes.set_xlabel('Quantiles of Normal Distribution ')
+                self.axes.text(posx, posy, "R^2=%1.4f" % r)
+                self.figure.autofmt_xdate()
+                self.canvas.draw()
         except Exception as error:
             print('Check function qqPlot. Cannot execute function. Reason: %s.' % (error))
     
@@ -832,15 +883,18 @@ class gdeDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         try:
             self.clearPlot()
             layer, fieldName, useSelection = self.recoverData()
-            x, y = sf.ecdfData(layer, fieldName, useSelection)
-            self.axes.plot(x, y, '--', label = fieldName)
-            self.axes.legend()
-            self.axes.set_title(self.tr('ECDF of %s' % (fieldName)))
-            self.axes.grid(self.checkShowGrid.isChecked())
-            self.axes.set_ylabel('Cumulative probability')
-            self.axes.set_xlabel('Values of %s' % (fieldName))
-            self.figure.autofmt_xdate()
-            self.canvas.draw()
+            if fieldName == '':
+                self.messageBoxCreation('One of Fields is not defined or supported.', 'ECDF Plot')
+            else:
+                x, y = sf.ecdfData(layer, fieldName, useSelection)
+                self.axes.plot(x, y, '--', label = fieldName)
+                self.axes.legend()
+                self.axes.set_title(self.tr('ECDF of %s' % (fieldName)))
+                self.axes.grid(self.checkShowGrid.isChecked())
+                self.axes.set_ylabel('Cumulative probability')
+                self.axes.set_xlabel('Values of %s' % (fieldName))
+                self.figure.autofmt_xdate()
+                self.canvas.draw()
         except Exception as error:
             print('Check function ecdfPlot. Cannot execute function. Reason: %s.' % (error))
     
@@ -852,21 +906,31 @@ class gdeDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             useSelection = self.checkSelection.isChecked()
             layerTwo = utils.getVectorLayerByName(self.layerTwoAnalysisMapLayerComboBox.currentText())
             fieldNameTwo = self.fieldTwoLayerAnalysisFieldComboBox.currentText()
-            resultDataOne = utils.useSelectionOneVariable(layerOne, fieldNameOne, useSelection)
-            resultDataTwo = utils.useSelectionOneVariable(layerTwo, fieldNameTwo, useSelection)
-            self.canvas.draw()
-            self.axes.set_title(self.tr("Frequency histogram"))
-            self.axes.grid(self.checkShowGrid.isChecked())
-            self.axes.set_ylabel('Frequency')
-            if self.checkBin.isChecked():
-                numberBinOne = int(self.lineEditBinNumber.displayText())
-                numberBinTwo = int(self.lineEditBinNumber.displayText())
+            if fieldNameOne == '' or fieldNameTwo == '':
+                self.messageBoxCreation('One of Fields is not defined or supported.', 'Multiple Plot')
             else:
-                numberBinOne = int(float(1.0) + float(3.222)*log(len(resultDataOne)))
-                numberBinTwo = int(float(1.0) + float(3.222)*log(len(resultDataTwo)))
-            self.axes.axes.hist(resultDataOne, histtype = 'step', bins = numberBinOne, label = '%s' % (fieldNameOne), color = 'red')
-            self.axes.axes.hist(resultDataTwo, histtype = 'step',bins = numberBinTwo, label = '%s' % (fieldNameTwo), color = 'blue')
-            self.axes.legend()
+                resultDataOne = utils.useSelectionOneVariable(layerOne, fieldNameOne, useSelection)
+                resultDataTwo = utils.useSelectionOneVariable(layerTwo, fieldNameTwo, useSelection)
+                print(type(resultDataOne))
+                for num in resultDataOne:
+                    print(type(num))
+                if len(resultDataOne) != len(resultDataTwo):
+                    self.messageBoxCreation('Different sizes of samples. Field One has a different size of Field Two', 'Multiple Plot')
+                else:
+                    self.canvas.draw()
+                    self.axes.set_title(self.tr("Frequency histogram"))
+                    self.axes.grid(self.checkShowGrid.isChecked())
+                    self.axes.set_ylabel('Frequency')
+                    if self.checkBin.isChecked() and self.lineEditBinNumber.displayText() != '':
+                        numberBinOne = int(self.lineEditBinNumber.displayText())
+                        numberBinTwo = int(self.lineEditBinNumber.displayText())
+                    else:
+                        numberBinOne = int(float(1.0) + float(3.222)*log(len(resultDataOne)))
+                        numberBinTwo = int(float(1.0) + float(3.222)*log(len(resultDataTwo)))
+                    self.axes.axes.hist(resultDataOne, histtype = 'step', bins = numberBinOne, label = '%s' % (fieldNameOne), color = 'red')
+                    self.axes.axes.hist(resultDataTwo, histtype = 'step',bins = numberBinTwo, label = '%s' % (fieldNameTwo), color = 'blue')
+                    self.axes.legend()
+                    self.canvas.draw()
         except Exception as error:
             print('Check function multiplePlot. Cannot execute function. Reason: %s.' % (error))
     
@@ -876,104 +940,107 @@ class gdeDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
             connection = dbf.connectDatabase(dictConnection)
             identifier = self.identifier.displayText()
-            if 'AD' in identifier:
-                variable_one, variable_two = dbf.consolidationGenerateData(connection, identifier)
-                self.axes.plot(variable_one, variable_two,"rs-", color='red', label = str(identifier))
-                self.axes.set_title('e vs Presure')
-                self.axes.set_xscale('log')
-                self.axes.set_ylabel('e')
-                self.axes.set_xlabel('Pressure')
-                self.axes.grid(which="both", ls="-", color='0.65')
-                self.axes.legend(loc = 1)
-            elif 'G' in identifier:  # x em log
-                variable_one, variable_two, g_teor_finos, g_teor_gro, g_diam_efet, g_coef_unif, g_coef_curv, g_defloc = dbf.granulometryGenerateData(connection, identifier)
-                self.axes.plot(variable_one, variable_two,"rs-", color='red', label = str(identifier))
-                self.axes.set_xscale('log')
-                self.axes.set_ylabel('Percentage pass')
-                self.axes.set_xlabel('Particule size')
-                self.axes.axvline(g_teor_finos, linestyle='--', color = 'blue', label = 'Fines content: %s'% (str(round(g_teor_finos,2))))
-                self.axes.axvline(g_teor_gro, linestyle='--', color = 'green', label = 'Coarse content: %s'% (str(round(g_teor_gro,2))))
-                self.axes.axvline(g_diam_efet, linestyle='--', color = 'yellow', label = 'Effective diameter: %s'% (str(round(g_diam_efet,4))))
-                self.axes.axvline(g_coef_unif, linestyle='--', color = 'orange', label = 'Coefficient of uniformity: %s'% (str(round(g_coef_unif,4))))
-                self.axes.axvline(g_coef_curv, linestyle='--', color = 'black', label = 'Coefficient of curvature: %s'% (str(round(g_coef_curv,4))))
-                self.figure.autofmt_xdate()
-                self.axes.set_title('Particule Size vs Percentage (%s)' % (g_defloc))
-                self.axes.set_yticks(arange(0, 110, 10))
-                self.axes.grid(which="both", ls="-", color='0.65')
-                self.axes.legend(loc = 2)
-            elif 'LA' in identifier:
-                if self.chech_use_eda_la.isChecked() == False:
-                    dataframe = dbf.atterberbGenerateData(connection, identifier)
-                    self.axes.plot(dataframe.loc[0,'la_limit_liq'], dataframe.loc[0,'la_ind_plast'],"*", color='red', label = str(identifier))
-                else:
-                    layerOne = utils.getVectorLayerByName(self.layerOneAnalysisMapLayerComboBox.currentText())
-                    fieldNameOne = self.fieldOneLayerAnalysisFieldComboBox.currentText()
-                    useSelection = self.checkSelection.isChecked()
-                    layerTwo = utils.getVectorLayerByName(self.layerTwoAnalysisMapLayerComboBox.currentText())
-                    fieldNameTwo = self.fieldTwoLayerAnalysisFieldComboBox.currentText()
-                    resultDataOne = utils.useSelectionOneVariable(layerOne, fieldNameOne, useSelection)
-                    resultDataTwo = utils.useSelectionOneVariable(layerTwo, fieldNameTwo, useSelection)
-                    result_data_one_new, result_data_two_new = utils.checkEqualNumberTwoVariables (resultDataOne, resultDataTwo)
-                    self.axes.plot(result_data_one_new, result_data_two_new,"*", color='red', label = 'EDA samples')
-                self.axes.set_ylabel('Plasticity index (%)')
-                self.axes.set_xlabel('Liquid limit (%)')
-                self.axes.set_yticks(arange(0, 110, 10))
-                self.axes.set_xticks(arange(0, 110, 10))
-                self.axes.set_title('Liquid limit vs Plasticity index (%s)' % (identifier))
-                self.axes.grid(which="both", ls="-", color='0.65')
-                self.axes.axvline(50, linestyle='--', color = 'black')
-                self.axes.axvline(30, linestyle='--', color = 'black')
-                self.axes.plot([20,100], [0, 58.4],"-", color='blue', label = 'Linha A - IP = 0,73(LL-20)')
-                self.axes.plot([8,75], [0, 60.3],"-", color='green', label = 'Linha U - IP = 0,90(LL-8)')
-                self.axes.text(42, 5, 'OL')
-                self.axes.text(35, 27, 'CL')
-                self.axes.text(35, 5, 'ML')
-                self.axes.text(53, 14, 'MH')
-                self.axes.text(53, 35, 'CH')
-                self.axes.text(33, 14, 'OH')
-                self.axes.legend(loc = 2)
-            elif 'ISC' in identifier:
-                dataframe = dbf.iscGenerateData(connection, identifier)
-                self.axes.plot(dataframe.loc[:,'iscm_penet'], dataframe.loc[:,'iscm_pressao'],"rs-", color='red', label = str(identifier))
-                self.axes.set_title('Pressure vs Penetration (%s)' % (identifier))
-                self.axes.grid(which="both", ls="-", color='0.65')
-                self.axes.legend(loc = 2)
-                self.axes.set_ylabel('Pressure (MPa)')
-                self.axes.set_xlabel('Penetration (mm)')
-            elif 'CP' in identifier:
-                dataframe = dbf.compactacGenerateData(connection, identifier)
-                self.axes.plot(dataframe.loc[:,'cm_umid_med'], dataframe.loc[:,'cm_densidade'],"rs-", color='red', label = str(identifier))
-                self.axes.set_title('Specifc weight vs moisture (%s)' % (identifier))
-                self.axes.grid(which="both", ls="-", color='0.65')
-                self.axes.legend(loc = 2)
-                self.axes.set_ylabel('Specifc weight (kN/m³)')
-                self.axes.set_xlabel('Moisture (%)')
-                pass
-            elif 'CD' in identifier:
-                pass
-            elif 'TR' in identifier:
-                pass
-            elif 'PZ' in identifier:
-                dataframe, dataframe_chuvoso, dataframe_seco = dbf.piezometerGenerateData(connection, identifier)
-                self.axes.plot(dataframe.loc[:,'pz_data_med'], dataframe.loc[:,'pz_na_med'],"rs-", color='blue', label = str(identifier))
-                self.axes.set_title('Historical measure of water depth (%s)' % (identifier))               
-                self.axes.grid(which="both", ls="-", color='0.65')
-                min_value, max_value, med_value, median_value = amin(dataframe.loc[:,'pz_na_med']), amax(dataframe.loc[:,'pz_na_med']), round(mean(dataframe.loc[:,'pz_na_med']),2), round(median(dataframe.loc[:,'pz_na_med']),2)
-                med_value_chuvoso, median_value_chuvoso = round(mean(dataframe_chuvoso.loc[:,'pz_na_med']),2), round(median(dataframe_chuvoso.loc[:,'pz_na_med']),2)
-                med_value_seco, median_value_seco = round(mean(dataframe_seco.loc[:,'pz_na_med']),2), round(median(dataframe_seco.loc[:,'pz_na_med']),2)
-                self.axes.axhline(med_value, linestyle='--', color = 'black', label = 'Mean: %s' % (str(med_value)))
-                self.axes.axhline(median_value, linestyle='--', color = 'red', label = 'Median: %s' % (str(median_value)))
-                self.axes.axhline(med_value_chuvoso, linestyle='--', color = 'yellow', label = 'Mean(Wet period): %s' % (str(med_value)))
-                self.axes.axhline(median_value_chuvoso, linestyle='--', color = 'green', label = 'Median(Wet period): %s' % (str(median_value)))
-                self.axes.axhline(med_value_seco, linestyle='--', color = 'pink', label = 'Mean(Dry period): %s' % (str(med_value)))
-                self.axes.axhline(median_value_seco, linestyle='--', color = 'purple', label = 'Median(Dry period): %s' % (str(median_value)))
-                self.axes.legend(loc = 1)
-                self.axes.set_ylabel('Water depth (m)')
-                self.axes.set_xlabel('Date')
-                self.axes.set_yticks(arange(min_value-1, max_value+1, 0.5))
-                self.axes.invert_yaxis()
-            self.canvas.draw()
-            connection.close()
+            if identifier [0:2] not in ['AD', 'GR', 'LA', 'IS', 'CP', 'CD', 'TR', 'PZ']:
+                self.messageBoxCreation('This code is not valid. Pleas use AD, GR, LA, IS, CP, CD, TR, PZ.', 'Generate Tests Graphs')
+            else:
+                if 'AD' in identifier:
+                    variable_one, variable_two = dbf.consolidationGenerateData(connection, identifier)
+                    self.axes.plot(variable_one, variable_two,"rs-", color='red', label = str(identifier))
+                    self.axes.set_title('e vs Presure')
+                    self.axes.set_xscale('log')
+                    self.axes.set_ylabel('e')
+                    self.axes.set_xlabel('Pressure')
+                    self.axes.grid(which="both", ls="-", color='0.65')
+                    self.axes.legend(loc = 1)
+                elif 'GR' in identifier:  # x em log
+                    variable_one, variable_two, g_teor_finos, g_teor_gro, g_diam_efet, g_coef_unif, g_coef_curv, g_defloc = dbf.granulometryGenerateData(connection, identifier)
+                    self.axes.plot(variable_one, variable_two,"rs-", color='red', label = str(identifier))
+                    self.axes.set_xscale('log')
+                    self.axes.set_ylabel('Percentage pass')
+                    self.axes.set_xlabel('Particule size')
+                    self.axes.axvline(g_teor_finos, linestyle='--', color = 'blue', label = 'Fines content: %s'% (str(round(g_teor_finos,2))))
+                    self.axes.axvline(g_teor_gro, linestyle='--', color = 'green', label = 'Coarse content: %s'% (str(round(g_teor_gro,2))))
+                    self.axes.axvline(g_diam_efet, linestyle='--', color = 'yellow', label = 'Effective diameter: %s'% (str(round(g_diam_efet,4))))
+                    self.axes.axvline(g_coef_unif, linestyle='--', color = 'orange', label = 'Coefficient of uniformity: %s'% (str(round(g_coef_unif,4))))
+                    self.axes.axvline(g_coef_curv, linestyle='--', color = 'black', label = 'Coefficient of curvature: %s'% (str(round(g_coef_curv,4))))
+                    self.figure.autofmt_xdate()
+                    self.axes.set_title('Particule Size vs Percentage (%s)' % (g_defloc))
+                    self.axes.set_yticks(arange(0, 110, 10))
+                    self.axes.grid(which="both", ls="-", color='0.65')
+                    self.axes.legend(loc = 2)
+                elif 'LA' in identifier:
+                    if self.chech_use_eda_la.isChecked() == False:
+                        dataframe = dbf.atterberbGenerateData(connection, identifier)
+                        self.axes.plot(dataframe.loc[0,'la_limit_liq'], dataframe.loc[0,'la_ind_plast'],"*", color='red', label = str(identifier))
+                    else:
+                        layerOne = utils.getVectorLayerByName(self.layerOneAnalysisMapLayerComboBox.currentText())
+                        fieldNameOne = self.fieldOneLayerAnalysisFieldComboBox.currentText()
+                        useSelection = self.checkSelection.isChecked()
+                        layerTwo = utils.getVectorLayerByName(self.layerTwoAnalysisMapLayerComboBox.currentText())
+                        fieldNameTwo = self.fieldTwoLayerAnalysisFieldComboBox.currentText()
+                        resultDataOne = utils.useSelectionOneVariable(layerOne, fieldNameOne, useSelection)
+                        resultDataTwo = utils.useSelectionOneVariable(layerTwo, fieldNameTwo, useSelection)
+                        result_data_one_new, result_data_two_new = utils.checkEqualNumberTwoVariables (resultDataOne, resultDataTwo)
+                        self.axes.plot(result_data_one_new, result_data_two_new,"*", color='red', label = 'EDA samples')
+                    self.axes.set_ylabel('Plasticity index (%)')
+                    self.axes.set_xlabel('Liquid limit (%)')
+                    self.axes.set_yticks(arange(0, 110, 10))
+                    self.axes.set_xticks(arange(0, 110, 10))
+                    self.axes.set_title('Liquid limit vs Plasticity index (%s)' % (identifier))
+                    self.axes.grid(which="both", ls="-", color='0.65')
+                    self.axes.axvline(50, linestyle='--', color = 'black')
+                    self.axes.axvline(30, linestyle='--', color = 'black')
+                    self.axes.plot([20,100], [0, 58.4],"-", color='blue', label = 'Linha A - IP = 0,73(LL-20)')
+                    self.axes.plot([8,75], [0, 60.3],"-", color='green', label = 'Linha U - IP = 0,90(LL-8)')
+                    self.axes.text(42, 5, 'OL')
+                    self.axes.text(35, 27, 'CL')
+                    self.axes.text(35, 5, 'ML')
+                    self.axes.text(53, 14, 'MH')
+                    self.axes.text(53, 35, 'CH')
+                    self.axes.text(33, 14, 'OH')
+                    self.axes.legend(loc = 2)
+                elif 'IS' in identifier:
+                    dataframe = dbf.iscGenerateData(connection, identifier)
+                    self.axes.plot(dataframe.loc[:,'iscm_penet'], dataframe.loc[:,'iscm_pressao'],"rs-", color='red', label = str(identifier))
+                    self.axes.set_title('Pressure vs Penetration (%s)' % (identifier))
+                    self.axes.grid(which="both", ls="-", color='0.65')
+                    self.axes.legend(loc = 2)
+                    self.axes.set_ylabel('Pressure (MPa)')
+                    self.axes.set_xlabel('Penetration (mm)')
+                elif 'CP' in identifier:
+                    dataframe = dbf.compactacGenerateData(connection, identifier)
+                    self.axes.plot(dataframe.loc[:,'cm_umid_med'], dataframe.loc[:,'cm_densidade'],"rs-", color='red', label = str(identifier))
+                    self.axes.set_title('Specifc weight vs moisture (%s)' % (identifier))
+                    self.axes.grid(which="both", ls="-", color='0.65')
+                    self.axes.legend(loc = 2)
+                    self.axes.set_ylabel('Specifc weight (kN/m³)')
+                    self.axes.set_xlabel('Moisture (%)')
+                    pass
+                elif 'CD' in identifier:
+                    self.messageBoxCreation('This is not implemented yet (CD).', 'Generate Tests Graphs')
+                elif 'TR' in identifier:
+                    self.messageBoxCreation('This is not implemented yet (TR).', 'Generate Tests Graphs')
+                elif 'PZ' in identifier:
+                    dataframe, dataframe_chuvoso, dataframe_seco = dbf.piezometerGenerateData(connection, identifier)
+                    self.axes.plot(dataframe.loc[:,'pz_data_med'], dataframe.loc[:,'pz_na_med'],"rs-", color='blue', label = str(identifier))
+                    self.axes.set_title('Historical measure of water depth (%s)' % (identifier))               
+                    self.axes.grid(which="both", ls="-", color='0.65')
+                    min_value, max_value, med_value, median_value = amin(dataframe.loc[:,'pz_na_med']), amax(dataframe.loc[:,'pz_na_med']), round(mean(dataframe.loc[:,'pz_na_med']),2), round(median(dataframe.loc[:,'pz_na_med']),2)
+                    med_value_chuvoso, median_value_chuvoso = round(mean(dataframe_chuvoso.loc[:,'pz_na_med']),2), round(median(dataframe_chuvoso.loc[:,'pz_na_med']),2)
+                    med_value_seco, median_value_seco = round(mean(dataframe_seco.loc[:,'pz_na_med']),2), round(median(dataframe_seco.loc[:,'pz_na_med']),2)
+                    self.axes.axhline(med_value, linestyle='--', color = 'black', label = 'Mean: %s' % (str(med_value)))
+                    self.axes.axhline(median_value, linestyle='--', color = 'red', label = 'Median: %s' % (str(median_value)))
+                    self.axes.axhline(med_value_chuvoso, linestyle='--', color = 'yellow', label = 'Mean(Wet period): %s' % (str(med_value)))
+                    self.axes.axhline(median_value_chuvoso, linestyle='--', color = 'green', label = 'Median(Wet period): %s' % (str(median_value)))
+                    self.axes.axhline(med_value_seco, linestyle='--', color = 'pink', label = 'Mean(Dry period): %s' % (str(med_value)))
+                    self.axes.axhline(median_value_seco, linestyle='--', color = 'purple', label = 'Median(Dry period): %s' % (str(median_value)))
+                    self.axes.legend(loc = 1)
+                    self.axes.set_ylabel('Water depth (m)')
+                    self.axes.set_xlabel('Date')
+                    self.axes.set_yticks(arange(min_value-1, max_value+1, 0.5))
+                    self.axes.invert_yaxis()
+                self.canvas.draw()
+                connection.close()
         except Exception as error:
             print('Check function multiplePlot. Cannot execute function. Reason: %s.' % (error))
 
@@ -982,19 +1049,24 @@ class gdeDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.clearPlot()
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
             connection = dbf.connectDatabase(dictConnection)
-            profund, minimo, q1, mediano, media, q3, maximo = dbf.depthWetSPTGenerateData(connection)
-            self.axes.plot(minimo,profund,"rs-", color='black', label = 'Minimum')
-            self.axes.plot(q1,profund,"rs-", color='blue', label = 'Lower Quartile')
-            self.axes.plot(media,profund,"rs-", color='green', label = 'Mean')
-            self.axes.plot(mediano,profund,"rs-", color='yellow', label = 'Median')
-            self.axes.plot(q3,profund,"rs-", color='orange', label = 'Upper Quartile')
-            self.axes.plot(maximo,profund,"rs-", color='red', label = 'Maximum')
-            self.axes.set_ylabel('Depth (m)')
-            self.axes.set_xlabel('Number of hits - SPT')
-            self.axes.legend(loc = 1)
-            self.axes.invert_yaxis()
-            self.canvas.draw()
-            connection.close()
+            layer = self.MapLayerComboBoxSPT.currentText()
+            if 'vm_sondagem_percussao' not in layer:
+                self.messageBoxCreation('Please select a layer based on vm_sondagem_percussao structure inside schema ic.', 'Depth Wet SPT Generate Graph')
+            else:
+                profund, minimo, q1, mediano, media, q3, maximo = dbf.depthWetSPTGenerateData(connection, layer)
+                self.axes.plot(minimo,profund,"rs-", color='black', label = 'Minimum')
+                self.axes.plot(q1,profund,"rs-", color='blue', label = 'Lower Quartile')
+                self.axes.plot(media,profund,"rs-", color='green', label = 'Mean')
+                self.axes.plot(mediano,profund,"rs-", color='yellow', label = 'Median')
+                self.axes.plot(q3,profund,"rs-", color='orange', label = 'Upper Quartile')
+                self.axes.plot(maximo,profund,"rs-", color='red', label = 'Maximum')
+                self.axes.grid(self.checkShowGrid.isChecked())
+                self.axes.set_ylabel('Depth (m)')
+                self.axes.set_xlabel('Number of hits - SPT')
+                self.axes.legend(loc = 1)
+                self.axes.invert_yaxis()
+                self.canvas.draw()
+                connection.close()
         except Exception as error:
             print('Check function depthWetSPTGenerateGraph. Cannot execute function. Reason: %s.' % (error))
 
@@ -1003,19 +1075,24 @@ class gdeDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.clearPlot()
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
             connection = dbf.connectDatabase(dictConnection)
-            profund, minimo, q1, mediano, media, q3, maximo = dbf.depthDrySPTGenerateData(connection)
-            self.axes.plot(minimo,profund,"rs-", color='black', label = 'Minimum')
-            self.axes.plot(q1,profund,"rs-", color='blue', label = 'Lower Quartile')
-            self.axes.plot(media,profund,"rs-", color='green', label = 'Mean')
-            self.axes.plot(mediano,profund,"rs-", color='yellow', label = 'Median')
-            self.axes.plot(q3,profund,"rs-", color='orange', label = 'Upper Quartile')
-            self.axes.plot(maximo,profund,"rs-", color='red', label = 'Maximum')
-            self.axes.set_ylabel('Depth (m)')
-            self.axes.set_xlabel('Number of hits - SPT')
-            self.axes.legend(loc = 1)
-            self.axes.invert_yaxis()
-            self.canvas.draw()
-            connection.close()
+            layer = self.MapLayerComboBoxSPT.currentText()
+            if 'vm_sondagem_percussao' not in layer:
+                self.messageBoxCreation('Please select a layer based on vm_sondagem_percussao structure inside schema ic.', 'Depth Dry SPT Generate Graph')
+            else:
+                profund, minimo, q1, mediano, media, q3, maximo = dbf.depthDrySPTGenerateData(connection, layer)
+                self.axes.plot(minimo,profund,"rs-", color='black', label = 'Minimum')
+                self.axes.plot(q1,profund,"rs-", color='blue', label = 'Lower Quartile')
+                self.axes.plot(media,profund,"rs-", color='green', label = 'Mean')
+                self.axes.plot(mediano,profund,"rs-", color='yellow', label = 'Median')
+                self.axes.plot(q3,profund,"rs-", color='orange', label = 'Upper Quartile')
+                self.axes.plot(maximo,profund,"rs-", color='red', label = 'Maximum')
+                self.axes.grid(self.checkShowGrid.isChecked())
+                self.axes.set_ylabel('Depth (m)')
+                self.axes.set_xlabel('Number of hits - SPT')
+                self.axes.legend(loc = 1)
+                self.axes.invert_yaxis()
+                self.canvas.draw()
+                connection.close()
         except Exception as error:
             print('Check function depthDrySPTGenerateData. Cannot execute function. Reason: %s.' % (error))
     
@@ -1024,21 +1101,76 @@ class gdeDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.clearPlot()
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
             connection = dbf.connectDatabase(dictConnection)
-            profund, minimo, q1, mediano, media, q3, maximo = dbf.depthSPTGenerateData(connection)
-            self.axes.plot(minimo,profund,"rs-", color='black', label = 'Minimum')
-            self.axes.plot(q1,profund,"rs-", color='blue', label = 'Lower Quartile')
-            self.axes.plot(media,profund,"rs-", color='green', label = 'Mean')
-            self.axes.plot(mediano,profund,"rs-", color='yellow', label = 'Median')
-            self.axes.plot(q3,profund,"rs-", color='orange', label = 'Upper Quartile')
-            self.axes.plot(maximo,profund,"rs-", color='red', label = 'Maximum')
-            self.axes.set_ylabel('Depth (m)')
-            self.axes.set_xlabel('Number of hits - SPT')
-            self.axes.legend(loc = 1)
-            self.axes.invert_yaxis()
-            self.canvas.draw()
-            connection.close()
+            layer = self.MapLayerComboBoxSPT.currentText()
+            if 'vm_sondagem_percussao' not in layer:
+                self.messageBoxCreation('Please select a layer based on vm_sondagem_percussao structure inside schema ic.', 'Depth SPT Generate Graph')
+            else:
+                profund, minimo, q1, mediano, media, q3, maximo = dbf.depthSPTGenerateData(connection, layer)
+                self.axes.plot(minimo,profund,"rs-", color='black', label = 'Minimum')
+                self.axes.plot(q1,profund,"rs-", color='blue', label = 'Lower Quartile')
+                self.axes.plot(media,profund,"rs-", color='green', label = 'Mean')
+                self.axes.plot(mediano,profund,"rs-", color='yellow', label = 'Median')
+                self.axes.plot(q3,profund,"rs-", color='orange', label = 'Upper Quartile')
+                self.axes.plot(maximo,profund,"rs-", color='red', label = 'Maximum')
+                self.axes.grid(self.checkShowGrid.isChecked())
+                self.axes.set_ylabel('Depth (m)')
+                self.axes.set_xlabel('Number of hits - SPT')
+                self.axes.legend(loc = 1)
+                self.axes.invert_yaxis()
+                self.canvas.draw()
+                connection.close()
         except Exception as error:
             print('Check function depthSPTGenerateGraph. Cannot execute function. Reason: %s.' % (error))
+    
+    def depthSPTOriginGenerateGraph(self):
+        try:
+            self.clearPlot()
+            dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
+            connection = dbf.connectDatabase(dictConnection)
+            layer = self.MapLayerComboBoxSPT.currentText()
+            if 'vm_sondagem_percussao' not in layer:
+                self.messageBoxCreation('Please select a layer based on vm_sondagem_percussao structure inside schema ic.', 'Depth Origin Generate Graph')
+            else:
+                geociu = self.lineEditGeociu.displayText()
+                profund, var_spc_os_desc, legend_origin_values, legend_origin_text = dbf.recoverDataSPTOrigin(connection, layer, geociu)
+                self.axes.plot(var_spc_os_desc, profund,"rs-", color='red', label = 'Origem geológica')
+                self.axes.legend(loc = 1)
+                self.axes.set_ylabel('Depth (m)')
+                self.axes.invert_yaxis()
+                self.axes.grid(self.checkShowGrid.isChecked())
+                self.axes.set_xticks(legend_origin_values)
+                self.axes.set_xticklabels(legend_origin_text)        
+                self.figure.autofmt_xdate()
+                self.canvas.draw()
+                connection.close()
+        except Exception as error:
+            print('Check function depthSPTOriginGenerateGraph. Cannot execute function. Reason: %s.' % (error))
+
+    def depthSPTTexturaGenerateGraph(self):
+        try:
+            self.clearPlot()
+            dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
+            connection = dbf.connectDatabase(dictConnection)
+            layer = self.MapLayerComboBoxSPT.currentText()
+            if 'vm_sondagem_percussao' not in layer:
+                self.messageBoxCreation('Please select a layer based on vm_sondagem_percussao structure inside schema ic.', 'Depth Texture Generate Graph')
+            else:
+                geociu = self.lineEditGeociu.displayText()
+                profund, var_spc_text_prim, var_spc_text_sec, var_spc_text_comp, texture_values, texture_text = dbf.recoverDataSPTTexture(connection, layer, geociu)
+                self.axes.plot(var_spc_text_prim, profund,"rs-", color='red', label = 'Textura primária')
+                self.axes.plot(var_spc_text_sec, profund,"rs-", color='blue', label = 'Textura secundária')
+                self.axes.plot(var_spc_text_comp, profund,"rs-", color='green', label = 'Textura complementar')
+                self.axes.legend(loc = 1)
+                self.axes.set_ylabel('Depth (m)')
+                self.axes.invert_yaxis()
+                self.axes.grid(self.checkShowGrid.isChecked())
+                self.axes.set_xticks(texture_values)
+                self.axes.set_xticklabels(texture_text)        
+                self.figure.autofmt_xdate()
+                self.canvas.draw()
+                connection.close()
+        except Exception as error:
+            print('Check function depthSPTOriginGenerateGraph. Cannot execute function. Reason: %s.' % (error))
 
     def plot3d(self):
         try:

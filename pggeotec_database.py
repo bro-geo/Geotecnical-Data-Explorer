@@ -179,15 +179,15 @@ class databaseFunctions:
             print ("databaseFunctions.piezometerGenerateData. Reason: %s" %(error))
 
 
-    def depthWetSPTGenerateData(connection):
+    def depthWetSPTGenerateData(connection, layer):
         try:
             query_chuvoso = """
             WITH chuvoso AS (
-                    SELECT * FROM ic.vm_sond_percussao WHERE ((i_data_ini::text LIKE '%-09-%') OR (i_data_ini::text LIKE '%-10-%')
+                    SELECT * FROM ic."""+ layer+""" WHERE ((i_data_ini::text LIKE '%-09-%') OR (i_data_ini::text LIKE '%-10-%')
                     OR (i_data_ini::text LIKE '%-11-%') OR (i_data_ini::text LIKE '%-12-%') OR
                     (i_data_ini::text LIKE '%-01-%') OR (i_data_ini::text LIKE '%-02-%')
                     OR (i_data_ini::text LIKE '%-03-%') OR (i_data_ini::text LIKE '%-04-%')) AND spc_final <= 60
-                    AND sdg_profund = TRUNC(sdg_profund)
+                    AND sdg_profund = TRUNC(sdg_profund) AND spc_final IS NOT NULL
                 )
                 SELECT
                  min(spc_final),
@@ -221,13 +221,13 @@ class databaseFunctions:
         except Exception as error:
             print ("databaseFunctions.depthWetSPTGenerateData. Reason: %s" % (error))
 
-    def depthDrySPTGenerateData(connection):
+    def depthDrySPTGenerateData(connection, layer):
         try:
             query_chuvoso = """
             WITH seco AS (
-                    SELECT * FROM ic.vm_sond_percussao WHERE ((i_data_ini::text LIKE '%-05-%') OR (i_data_ini::text LIKE '%-06-%')
+                    SELECT * FROM ic."""+ layer+""" WHERE ((i_data_ini::text LIKE '%-05-%') OR (i_data_ini::text LIKE '%-06-%')
                     OR (i_data_ini::text LIKE '%-07-%') OR (i_data_ini::text LIKE '%-08-%')) AND spc_final <= 60
-                    AND sdg_profund = TRUNC(sdg_profund)
+                    AND sdg_profund = TRUNC(sdg_profund) AND spc_final IS NOT NULL
                 )
                 SELECT
                  min(spc_final),
@@ -261,12 +261,12 @@ class databaseFunctions:
         except Exception as error:
             print ("databaseFunctions.depthDrySPTGenerateData. Reason: %s" % (error))
             
-    def depthSPTGenerateData(connection):
+    def depthSPTGenerateData(connection, layer):
         try:
-            query_chuvoso = """
+            query = """
             WITH seco AS (
-                    SELECT * FROM ic.vm_sond_percussao WHERE spc_final <= 60
-                    AND sdg_profund = TRUNC(sdg_profund)
+                    SELECT * FROM ic."""+layer+""" WHERE spc_final <= 60
+                    AND sdg_profund = TRUNC(sdg_profund) AND spc_final IS NOT NULL
                 )
                 SELECT
                  min(spc_final),
@@ -284,7 +284,7 @@ class databaseFunctions:
                     sdg_profund ASC
             """
             cursor = connection.cursor()
-            cursor.execute(query_chuvoso)
+            cursor.execute(query)
             connection.commit()
             cursor_result = cursor.fetchall()
             profund, minimo, q1, mediano, media, q3, maximo = [],[],[],[],[],[],[]
@@ -296,6 +296,7 @@ class databaseFunctions:
                 mediano.append(element[3])
                 q3.append(element[4])
                 maximo.append(element[5])
+            return profund, minimo, q1, mediano, media, q3, maximo
         except Exception as error:
             print ("databaseFunctions.depthSPTGenerateData. Reason: %s" % (error))
 
@@ -335,3 +336,55 @@ class databaseFunctions:
             connectionOne.close()
             connectionTwo.close()
 
+    def recoverDataSPTOrigin(connection, layer, geociu):
+        try:
+            cursor_legend_origin = connection.cursor()
+            cursor_legend_origin.execute("SELECT dm_os_pk, dm_os_desc FROM dom.tb_dom_origem_solo")
+            cursor_legend_origin_result = cursor_legend_origin.fetchall()
+            connection.commit()
+            legend_origin_values = []
+            legend_origin_text = []
+            k = 0 
+            for element_legend_origin in cursor_legend_origin_result:
+                legend_origin_values.append(float(element_legend_origin[0]))
+                legend_origin_text.append(str(element_legend_origin[1]))
+                k += 1
+
+            cursor_percussao = connection.cursor()
+            cursor_percussao.execute("SELECT sdg_profund, spc_os_desc FROM ic.%s WHERE sdg_geociu = '%s' ORDER BY sdg_profund ASC " % (layer, geociu))
+            cursor_percussao_result = cursor_percussao.fetchall()
+            connection.commit()
+            profund, var_spc_os_desc  = [], []
+            for m in cursor_percussao_result:
+                var_spc_os_desc.append(m[1])
+                profund.append(m[0])       
+            return profund, var_spc_os_desc, legend_origin_values, legend_origin_text
+        except Exception as error:
+            print ("databaseFunctions.recoverDataSPTOrigin. Reason: %s" % (error))
+    
+    def recoverDataSPTTexture(connection, layer, geociu):
+        try:
+            cursor_legend_texture = connection.cursor()
+            cursor_legend_texture.execute("SELECT dm_text_pk, dm_text_desc FROM dom.tb_dom_textura_solo")
+            cursor_legend_texture_result = cursor_legend_texture.fetchall()
+            connection.commit()
+            texture_values, texture_text = [], []
+            w = 0 
+            for element_texture in cursor_legend_texture_result:
+                texture_values.append(float(element_texture[0]))
+                texture_text.append(str(element_texture[1]))
+                w += 1
+
+            cursor_percussao = connection.cursor()
+            cursor_percussao.execute("SELECT sdg_profund, spc_text_prim, spc_text_sec, spc_text_comp FROM ic.%s WHERE sdg_geociu = '%s' ORDER BY sdg_profund ASC " % (layer, geociu))
+            cursor_percussao_result = cursor_percussao.fetchall()
+            connection.commit()
+            profund, var_spc_os_desc, var_spc_text_prim, var_spc_text_sec, var_spc_text_comp = [], [], [], [], []
+            for m in cursor_percussao_result:
+                var_spc_text_prim.append(m[1])
+                var_spc_text_sec.append(m[2])
+                var_spc_text_comp.append(m[3])
+                profund.append(m[0])       
+            return profund, var_spc_text_prim, var_spc_text_sec, var_spc_text_comp, texture_values, texture_text
+        except Exception as error:
+            print ("databaseFunctions.recoverDataSPTTexture. Reason: %s" % (error))
