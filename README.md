@@ -1,9 +1,9 @@
 <h2> Geotecnical Data Explorer </h2>
-<p>A QGIS plugin that allow to explore data from the geotechnical database implemented by pggeotec PostgreSQL extension. This plugin is also part of the thesis that will be presented in Geotechnical Pós Graduation Program in UnB with the preliminar title: "Banco tridimensional de dados geotécnicos"</p>
+<h3> Experimental Plugin - User has to donwload from the develop branch and copile the necessary libraries </h3>
+<p>A QGIS plugin that allow to explore data from the geotechnical database implemented by pggeotec PostgreSQL extension. This plugin is also part of the thesis that will be presented in Geotechnical Pós Graduation Program in UnB with the preliminar title: "Banco de dados geotécnicos tridimensionais (BDGT)"</p>
 <h3> Dependent resources </h3>
 <ul>
-                    <li>Postgres v11.7 + Postgis 3.0.0 (Have to be instaled in de default path.)</li>
-                    <li>Qgis v3.10.2-A Corunã</li>
+                    <li>Qgis v3.10.2-A Corunã or better (Tested on 3.16 and 3.24)</li>
                     <li>Python 3.7 - Library: </li>
                     <ul>
                         <div id="python-modules">
@@ -19,9 +19,6 @@
                             </div>
                             <div id="python-modules-p2">
                                 <li>pathlib</li>
-                                <li>statsmodel 0.11.1</li>
-                                <li>PyKrige 1.5.0</li>
-                                <li>gstools 1.2.1</li>
                                 <li>matplotlib</li>
                                 <li>scipy</li>
                                 <li>mpl_toolkits</li>
@@ -33,7 +30,6 @@
                                 <li>pandas</li>
                                 <li>datetime</li>
                                 <li>warnings</li>
-                                <li>subprocess</li>
                                 <li>shutil</li>
                             </div>
                         </div>
@@ -41,7 +37,7 @@
                 </ul>
 
 <h3> Documentation </h3>
-<p> Online documentation: About on plugin folder.</p>
+<p> Online documentation: It will available.</p>
 <p> License</p>
 <p><b> Copyright (C) 2021 Bruno Rodrigues</b></p>
 
