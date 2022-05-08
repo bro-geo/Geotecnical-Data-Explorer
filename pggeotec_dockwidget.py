@@ -194,276 +194,384 @@ class gdeDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     def createExtensionExecute(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.createExtension(connection)
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to create the extension.', 'Create Extension')
+            elif dictConnection['password'] == '':
+                self.messageBoxCreation('Must inform pggeotec password.', 'Create Extension')
+            elif dictConnection['host'] == '':
+                self.messageBoxCreation('Must inform database host.', 'Create Extension')
+            elif dictConnection['port'] == '':
+                self.messageBoxCreation('Must inform database port. Usually port 5432 is used.', 'Create Extension')
+            elif dictConnection['name'] == '':
+                self.messageBoxCreation('Must inform database name.', 'Create Extension')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.createExtension(connection)
+                connection.close()
         except Exception as error:
-            print('Check function createDatabase. Cannot execute function. Reason: %s.' % (error))
-        finally:
-            connection.close()
+            print('Check function createDatabase. Cannot execute function. Reason: %s.' % (error))            
     
     def dropExtensionExecute(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.dropExtension(connection)
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to drop the extension.', 'Create Extension')
+            elif dictConnection['password'] == '':
+                self.messageBoxCreation('Must inform pggeotec password.', 'Create Extension')
+            elif dictConnection['host'] == '':
+                self.messageBoxCreation('Must inform database host.', 'Create Extension')
+            elif dictConnection['port'] == '':
+                self.messageBoxCreation('Must inform database port. Usually port 5432 is used.', 'Create Extension')
+            elif dictConnection['name'] == '':
+                self.messageBoxCreation('Must inform database name.', 'Create Extension')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.dropExtension(connection)
+                connection.close()
         except Exception as error:
             print('Check function createDatabase. Cannot execute function. Reason: %s.' % (error))
-        finally:
-            connection.close()
 
     def refreshMatviewsExecute(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.refreshMatviews(connection)
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Refresh Matviews')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.refreshMatviews(connection)
+                connection.close()
         except Exception as error:
             print('Check function refreshMatviews. Cannot execute function. Reason: %s.' % (error))
     
     def executeST_Instrumentacao3D(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'ST_Instrumentacao3D')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute ST_Instrumentacao3D')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'ST_Instrumentacao3D')
         except Exception as error:
             print('Check function executeST_Instrumentacao3D. Cannot execute function. Reason: %s.' % (error))
 
     def executeST_Investigacao3D(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'ST_Investigacao3D')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute ST_Investigacao3D')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'ST_Investigacao3D')
         except Exception as error:
             print('Check function executeST_Investigacao3D. Cannot execute function. Reason: %s.' % (error))
 
     def executeST_AmostraCaixa3D(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'ST_AmostraCaixa3D')
-        except Exception as error:
-            print('Check function executeST_AmostraCaixa3D. Cannot execute function. Reason: %s.' % (error))
-    
-    def executeST_AmostraCaixa3D(self):
-        try:
-            dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'ST_AmostraCaixa3D')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute ST_AmostraCaixa3D')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'ST_AmostraCaixa3D')
         except Exception as error:
             print('Check function executeST_AmostraCaixa3D. Cannot execute function. Reason: %s.' % (error))
 
     def executeST_EnsaiosCampo3D(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'ST_EnsaiosCampo3D')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute ST_EnsaiosCampo3D')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'ST_EnsaiosCampo3D')
         except Exception as error:
             print('Check function executeST_EnsaiosCampo3D. Cannot execute function. Reason: %s.' % (error))
 
     def executeST_AmostraCilindro3D(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'ST_AmostraCilindro3D')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute ST_AmostraCilindro3D')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'ST_AmostraCilindro3D')
         except Exception as error:
             print('Check function executeST_AmostraCilindro3D. Cannot execute function. Reason: %s.' % (error))
 
     def executeST_Sondagens3D(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'ST_Sondagens3D')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute ST_Sondagens3D')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'ST_Sondagens3D')
         except Exception as error:
             print('Check function executeST_Sondagens3D. Cannot execute function. Reason: %s.' % (error))
     
     def executeST_EnsaiosCilindro3D(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'ST_EnsaiosCilindro3D')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute ST_EnsaiosCilindro3D')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'ST_EnsaiosCilindro3D')
         except Exception as error:
             print('Check function executeST_EnsaiosCilindro3D. Cannot execute function. Reason: %s.' % (error))
 
     def executeST_EnsaiosCaixa3D(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'ST_EnsaiosCaixa3D')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute ST_EnsaiosCaixa3D')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'ST_EnsaiosCaixa3D')
         except Exception as error:
             print('Check function executeST_EnsaiosCaixa3D. Cannot execute function. Reason: %s.' % (error))
     
     def executeST_UnidadeSolo3D(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'ST_UnidadeSolo3D')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute ST_UnidadeSolo3D')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'ST_UnidadeSolo3D')
         except Exception as error:
             print('Check function executeST_UnidadeSolo3D. Cannot execute function. Reason: %s.' % (error))
 
     def executeST_UnidadeRocha3D(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'ST_UnidadeRocha3D')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute ST_UnidadeRocha3D')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'ST_UnidadeRocha3D')
         except Exception as error:
             print('Check function executeST_UnidadeRocha3D. Cannot execute function. Reason: %s.' % (error))
     
     def executeST_UpdateGeometrySRID(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionOneParameters(connection, 'ST_UnidadeRocha3D', self.lineEditST_UpdateGeometrySRID.displayText())
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute ST_UpdateGeometrySRID')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionOneParameters(connection, 'ST_UpdateGeometrySRID', self.lineEditST_UpdateGeometrySRID.displayText())
         except Exception as error:
             print('Check function executeST_UpdateGeometrySRID. Cannot execute function. Reason: %s.' % (error))
 
     def executeValidateSelectedGeociu(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionOneParameters(connection, 'validateSelectedGeociu', self.lineEditST_validateSelectedGeociu.displayText())
+            if dictConnection['user'] != 'pggeotec' and dictConnection['user'] != 'consulta':
+                self.messageBoxCreation('Must use pggeotec or consulta user to use this function.', 'Execute validateSelectedGeociu')
+            elif self.lineEditST_validateSelectedGeociu.displayText() == '':
+                self.messageBoxCreation('Must inform geociu to use this function.', 'Execute validateSelectedGeociu')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionOneParameters(connection, 'validateSelectedGeociu', self.lineEditST_validateSelectedGeociu.displayText())
         except Exception as error:
             print('Check function executeValidateSelectedGeociu. Cannot execute function. Reason: %s.' % (error))
 
     def executeTurnOffKeysIndex(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'TurnOffKeysIndex')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute TurnOffKeysIndex')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'TurnOffKeysIndex')
         except Exception as error:
             print('Check function executeTurnOffKeysIndex. Cannot execute function. Reason: %s.' % (error))
 
     def executeTurnOnKeysIndex(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'TurnOnKeysIndex')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute TurnOnKeysIndex')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'TurnOnKeysIndex')
         except Exception as error:
             print('Check function executeTurnOnKeysIndex. Cannot execute function. Reason: %s.' % (error))
 
     def executeDropPermissions(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'DropPermissions')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute DropPermissions')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'DropPermissions')
         except Exception as error:
             print('Check function executeDropPermissions. Cannot execute function. Reason: %s.' % (error))
 
     def executeAddPermissions(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'AddPermissions')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute AddPermissions')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'AddPermissions')
         except Exception as error:
             print('Check function executeAddPermissions. Cannot execute function. Reason: %s.' % (error))
 
     def executeDropSpecificConstraints(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'DropSpecificConstraints')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute DropSpecificConstraints')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'DropSpecificConstraints')
         except Exception as error:
             print('Check function executeDropSpecificConstraints. Cannot execute function. Reason: %s.' % (error))
 
     def executeAddSpecificConstraints(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'AddSpecificConstraints')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute AddSpecificConstraints')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'AddSpecificConstraints')
         except Exception as error:
             print('Check function executeAddSpecificConstraints. Cannot execute function. Reason: %s.' % (error))
 
     def executeDropNotNullConstraints(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'DropNotNullConstraints')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute DropNotNullConstraints')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'DropNotNullConstraints')
         except Exception as error:
             print('Check function executeDropNotNullConstraints. Cannot execute function. Reason: %s.' % (error))
 
     def executeAddNotNullConstraints(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'AddNotNullConstraints')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute AddNotNullConstraints')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'AddNotNullConstraints')
         except Exception as error:
             print('Check function executeAddNotNullConstraints. Cannot execute function. Reason: %s.' % (error))
 
     def executeDropIndex(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'DropIndex')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute DropIndex')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'DropIndex')
         except Exception as error:
             print('Check function executeDropIndex. Cannot execute function. Reason: %s.' % (error))
 
     def executeCreateIndex(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'CreateIndex')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute CreateIndex')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'CreateIndex')
         except Exception as error:
             print('Check function executeCreateIndex. Cannot execute function. Reason: %s.' % (error))
 
     def executeDropGeometryIndex(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'DropGeometryIndex')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute DropGeometryIndex')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'DropGeometryIndex')
         except Exception as error:
             print('Check function executeDropGeometryIndex. Cannot execute function. Reason: %s.' % (error))
 
     def executeCreateGeometryIndex(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'CreateGeometryIndex')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute CreateGeometryIndex')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'CreateGeometryIndex')
         except Exception as error:
             print('Check function executeCreateGeometryIndex. Cannot execute function. Reason: %s.' % (error))
 
     def executeDropForeignKeys(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'DropForeignKeys')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute DropForeignKeys')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'DropForeignKeys')
         except Exception as error:
             print('Check function executeDropForeignKeys. Cannot execute function. Reason: %s.' % (error))
 
     def executeAddForeignKeys(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'AddForeignKeys')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute AddForeignKeys')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'AddForeignKeys')
         except Exception as error:
             print('Check function executeAddForeignKeys. Cannot execute function. Reason: %s.' % (error))
 
     def executeDropPrimaryKeys(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'DropPrimaryKeys')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute DropPrimaryKeys')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'DropPrimaryKeys')
         except Exception as error:
             print('Check function executeDropPrimaryKeys. Cannot execute function. Reason: %s.' % (error))
 
     def executeAddPrimaryKeys(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'AddPrimaryKeys')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute AddPrimaryKeys')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'AddPrimaryKeys')
         except Exception as error:
             print('Check function executeAddPrimaryKeys. Cannot execute function. Reason: %s.' % (error))
 
     def executeDropTriggers(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'DropTriggers')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute DropTriggers')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'DropTriggers')
         except Exception as error:
             print('Check function executeDropTriggers. Cannot execute function. Reason: %s.' % (error))
 
     def executeAddTriggers(self):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connection = dbf.connectDatabase(dictConnection)
-            dbf.executeExtensionFunctionNoParameters(connection, 'AddTriggers')
+            if dictConnection['user'] != 'pggeotec':
+                self.messageBoxCreation('Must use pggeotec user to use this function.', 'Execute AddTriggers')
+            else:
+                connection = dbf.connectDatabase(dictConnection)
+                dbf.executeExtensionFunctionNoParameters(connection, 'AddTriggers')
         except Exception as error:
             print('Check function executeAddTriggers. Cannot execute function. Reason: %s.' % (error))
 
@@ -1183,34 +1291,37 @@ class gdeDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             long = self.fieldTwoLayerAnalysisFieldComboBox3d.currentText()
             elev = self.fieldThreeLayerAnalysisFieldComboBox3d.currentText()
             var = self.fieldFourLayerAnalysisFieldComboBox3d.currentText()
-            color = self.colorPlot3d.currentText()
-            useSelection = self.checkSelection.isChecked()
-            resultDataLat = utils.useSelectionOneVariable(layer, lat, useSelection)
-            resultDataLong = utils.useSelectionOneVariable(layer, long, useSelection)
-            resultDataElev = utils.useSelectionOneVariable(layer, elev, useSelection)
-            resultDataVar = utils.useSelectionOneVariable(layer, var, useSelection)
-            resultDataVarCk, resultDataLatCk, resultDataLongCk, resultDataElevCk = utils.checkEqualNumberFourVariables (resultDataVar, resultDataLat, resultDataLong, resultDataElev)
-            matrix = zeros((len(resultDataVarCk), 4))
-            i = 0
-            for element in resultDataVarCk:
-                try:
-                    matrix[i][0], matrix[i][1], matrix[i][2], matrix[i][3] = float(resultDataLatCk[i]), float(resultDataLongCk[i]), float(resultDataElevCk[i]), float(element)
-                    i += 1
-                except ValueError as error:
-                    print('Check function dialog.plot_3d. Maybe imput is not a number. Reason %s' % (error))
-                    i += 1
-            cmapp = color 
-            c, s = matrix[:,3], matrix[:,3]   
-            self.axes3d.clear()
-            self.canvas3d.draw()
-            g = self.axes3d.scatter(matrix[:, 0], matrix[:, 1], matrix[:, 2], cmap = cmapp, c = c, s= 10, label = layerName)
-            self.axes3d.set_xlabel(lat, labelpad = 10)
-            self.axes3d.set_ylabel(long, labelpad = 10)
-            self.axes3d.set_zlabel(elev, labelpad = 10)
-            self.axes3d.legend(loc='upper left')
-            cbar = self.figure3d.colorbar(g, shrink=0.5, aspect=10)
-            self.axes3d.view_init(azim=int(azimutePlot3d), elev=int(elevationPlot3d))
-            self.canvas3d.draw()
+            if lat == '' or long == '' or elev == '' or var == '':
+                self.messageBoxCreation('Fields of Plot 3D are empty. Please select all fields.', 'Plot 3D')
+            else:
+                color = self.colorPlot3d.currentText()
+                useSelection = self.checkSelection.isChecked()
+                resultDataLat = utils.useSelectionOneVariable(layer, lat, useSelection)
+                resultDataLong = utils.useSelectionOneVariable(layer, long, useSelection)
+                resultDataElev = utils.useSelectionOneVariable(layer, elev, useSelection)
+                resultDataVar = utils.useSelectionOneVariable(layer, var, useSelection)
+                resultDataVarCk, resultDataLatCk, resultDataLongCk, resultDataElevCk = utils.checkEqualNumberFourVariables (resultDataVar, resultDataLat, resultDataLong, resultDataElev)
+                matrix = zeros((len(resultDataVarCk), 4))
+                i = 0
+                for element in resultDataVarCk:
+                    try:
+                        matrix[i][0], matrix[i][1], matrix[i][2], matrix[i][3] = float(resultDataLatCk[i]), float(resultDataLongCk[i]), float(resultDataElevCk[i]), float(element)
+                        i += 1
+                    except ValueError as error:
+                        print('Check function dialog.plot_3d. Maybe imput is not a number. Reason %s' % (error))
+                        i += 1
+                cmapp = color 
+                c, s = matrix[:,3], matrix[:,3]   
+                self.axes3d.clear()
+                self.canvas3d.draw()
+                g = self.axes3d.scatter(matrix[:, 0], matrix[:, 1], matrix[:, 2], cmap = cmapp, c = c, s= 10, label = layerName)
+                self.axes3d.set_xlabel(lat, labelpad = 10)
+                self.axes3d.set_ylabel(long, labelpad = 10)
+                self.axes3d.set_zlabel(elev, labelpad = 10)
+                self.axes3d.legend(loc='upper left')
+                cbar = self.figure3d.colorbar(g, shrink=0.5, aspect=10)
+                self.axes3d.view_init(azim=int(azimutePlot3d), elev=int(elevationPlot3d))
+                self.canvas3d.draw()
         except (Exception) as error:
             print('Check function plot_3d. Cannot execute function. Reason %s' % (error))
 
