@@ -131,6 +131,12 @@ class gdeDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.pushButtonAddTriggers.clicked.connect(self.executeAddTriggers)
         self.pushButtonConfigureDomain.clicked.connect(self.configureDomain)
         self.pushButtonCalculateExtent.clicked.connect(self.calculateGrid)
+        self.pushButtonInfoGrid.clicked.connect(self.infoGrid)
+        self.pushButtonMajorityInfo.clicked.connect(self.infoMajority)
+        self.pushButtonIDW.clicked.connect(self.infoIDW)
+
+        
+        
 
         # Graph
         self.pushButtonHistogram.clicked.connect(self.histogram)
@@ -175,7 +181,7 @@ class gdeDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
 
     ############################################################################  
-    #### combobox
+    #### Messages
     ############################################################################
     def messageBoxCreation(self, message, title):
         msgBox = QtWidgets.QMessageBox()
@@ -187,6 +193,16 @@ class gdeDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             print('You pressed OK')
         elif return_value == QtWidgets.QMessageBox.Cancel:
             print('You pressed Cancel')
+
+    def infoGrid (self):
+        self.messageBoxCreation('This tool calculate the extension of a feature selected on Analisys 3D tab. You can manually set the values for the grid. This tools was designed to fields like latitude, longitude, elevation and a numeric variable. ', 'Info')
+
+    def infoMajority (self):
+        self.messageBoxCreation('This tool execute an function available at extension. Layer must have the schema name and has to be inside the database.  Set de grid in Analisys 3D tab.', 'Info')
+    
+    def infoIDW (self):
+        self.messageBoxCreation('This tool execute an function available at extension. Layer must have the schema name and has to be inside the database.  Set de grid in Analisys 3D tab.', 'Info')
+
 
     ############################################################################  
     #### Database
@@ -583,83 +599,86 @@ class gdeDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             long = self.fieldTwoLayerAnalysisFieldComboBox3d.currentText()
             elev = self.fieldThreeLayerAnalysisFieldComboBox3d.currentText()
             var = self.fieldFourLayerAnalysisFieldComboBox3d.currentText()
-            color = self.colorPlot3d.currentText()
-            useSelection = self.checkSelection.isChecked()
-            resultDataLat = utils.useSelectionOneVariable(layer, lat, useSelection)
-            resultDataLong = utils.useSelectionOneVariable(layer, long, useSelection)
-            resultDataElev = utils.useSelectionOneVariable(layer, elev, useSelection)
-            resultDataVar = utils.useSelectionOneVariable(layer, var, useSelection)
-            resultDataVarCk, resultDataLatCk, resultDataLongCk, resultDataElevCk = utils.checkEqualNumberFourVariables (resultDataVar, resultDataLat, resultDataLong, resultDataElev)
-            step_x, step_y, step_z = self.step_x.displayText(), self.step_y.displayText(), self.step_z.displayText()
-            xMax, xMin, yMax, yMin, zMax, zMin = sf.calculateGridValues (resultDataLatCk, resultDataLongCk, resultDataElevCk)
-            values = [xMin, xMax, yMin, yMax, zMin, zMax]
-            j = 0
-            fields = [self.initial_x,  self.final_x, self.initial_y, self.final_y, self.initial_z, self.final_z]
-            for field in fields:
-                if field.displayText() == '':
-                    field.clear()
-                    field.insert(str(round(float(values[j]),2)))
-                    values[j] = float(field.displayText())
-                    j += 1
-                else:
-                    values[j] = float(field.displayText())
-                    j += 1
-            if self.checkPlotGrid.isChecked():
-                self.clearPlot3d() 
-                valores_latitude = arange(float(values[0]), float(values[1]), float(step_x))
-                valores_longitude = arange(float(values[2]), float(values[3]), float(step_y))
-                valores_altura = arange(float(values[4]), float(values[5]), float(step_z))
-                xGrid, yGrid, zGrid = meshgrid(valores_latitude,valores_longitude,valores_altura, indexing='ij')
-                elevationPlot3d, azimutePlot3d = self.elevationPlot3d.displayText(), self.azimutePlot3d.displayText()
+            if layerName == '' or lat == '' or long == '' or elev == '':
+                self.messageBoxCreation('Please select a layer on the Analisys 3D tab to calculate the extent for de grid.', 'Calculate Grid')
+            else:
                 color = self.colorPlot3d.currentText()
-                self.axes3d.clear()
-                self.canvas3d.draw()
-                g = self.axes3d.scatter(xGrid, yGrid, zGrid, cmap = color, s= 10, label = layerName)
-                self.axes3d.set_xlabel(lat, labelpad = 10)
-                self.axes3d.set_ylabel(long, labelpad = 10)
-                self.axes3d.set_zlabel(elev, labelpad = 10)
-                self.axes3d.legend(loc='upper left')
-                cbar = self.figure3d.colorbar(g, shrink=0.5, aspect=10)
-                self.axes3d.view_init(azim=int(azimutePlot3d), elev=int(elevationPlot3d))
-                self.canvas3d.draw()
-            if self.check_create_grid_table.isChecked():
-                layerNewName = (layerName.split('.')[1]).lower()
-                positions = stack((xGrid.ravel(), yGrid.ravel(), zGrid.ravel()), axis=1)
-                srid = self.lineEditGridSRID.displayText()
-                dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-                connectionGrid = dbf.connectDatabase(dictConnection)
-                cursorGrid = connectionGrid.cursor()
-                sql = ("""CREATE TABLE public.%s_grid_%s_%s_%s (grid_pk integer PRIMARY KEY, gridlatitude Numeric(10,4), gridlongitude Numeric(11,4), gridelevation Numeric(11,4), geom geometry(POINTZ,%s))""" % (layerNewName, step_x, step_y, step_z, srid))
-                cursorGrid.execute(sql)
-                connectionGrid.commit()
-                w = 0
-                entry = ''
-                for point in range(len(positions)):
-                    try:
-                        t_id = str(int(w))
-                        t_x = str(round(positions[w][0],4))
-                        t_y = str(round(positions[w][1],4))
-                        t_z = str(round(positions[w][2],4))
-                        t_point = """ST_SetSRID(ST_MakePoint(%s,%s,%s),%s)""" % (t_x,t_y,t_z, srid)
-                        entry = entry + """(%s,%s,%s,%s,%s),""" % (t_id, t_x, t_y, t_z, t_point)
-                        w += 1
-                    except:
-                        w += 1
-                        pass
-                entry = entry[0:-1]
-                dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.displayText(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-                connectionGridInsert = dbf.connectDatabase(dictConnection)
-                cursorGridInsert = connectionGridInsert.cursor()
-                sql2 = ("""INSERT INTO public.%s_grid_%s_%s_%s VALUES %s""" % (layerNewName, step_x, step_y, step_z, entry))
-                cursorGridInsert.execute(sql2)
-                connectionGridInsert.commit()
-                sql3 = ("""CREATE INDEX %s_grid_%s_%s_%s_geom_idx  ON public.%s_grid_%s_%s_%s USING GIST (geom);""" % (layerNewName, step_x, step_y, step_z, layerNewName, step_x, step_y, step_z))
-                cursorGridInsert.execute(sql3)
-                connectionGridInsert.commit()
-                sql4 = ("GRANT ALL ON public.%s_grid_%s_%s_%s TO %s;" % (layerNewName, step_x, step_y, step_z, self.lineEditLogin.displayText()))
-                cursorGridInsert.execute(sql4)
-                connectionGridInsert.commit()
-                connectionGridInsert.close()
+                useSelection = self.checkSelection.isChecked()
+                resultDataLat = utils.useSelectionOneVariable(layer, lat, useSelection)
+                resultDataLong = utils.useSelectionOneVariable(layer, long, useSelection)
+                resultDataElev = utils.useSelectionOneVariable(layer, elev, useSelection)
+                resultDataVar = utils.useSelectionOneVariable(layer, var, useSelection)
+                resultDataVarCk, resultDataLatCk, resultDataLongCk, resultDataElevCk = utils.checkEqualNumberFourVariables (resultDataVar, resultDataLat, resultDataLong, resultDataElev)
+                step_x, step_y, step_z = self.step_x.displayText(), self.step_y.displayText(), self.step_z.displayText()
+                xMax, xMin, yMax, yMin, zMax, zMin = sf.calculateGridValues (resultDataLatCk, resultDataLongCk, resultDataElevCk)
+                values = [xMin, xMax, yMin, yMax, zMin, zMax]
+                j = 0
+                fields = [self.initial_x,  self.final_x, self.initial_y, self.final_y, self.initial_z, self.final_z]
+                for field in fields:
+                    if field.displayText() == '':
+                        field.clear()
+                        field.insert(str(round(float(values[j]),2)))
+                        values[j] = float(field.displayText())
+                        j += 1
+                    else:
+                        values[j] = float(field.displayText())
+                        j += 1
+                if self.checkPlotGrid.isChecked():
+                    self.clearPlot3d() 
+                    valores_latitude = arange(float(values[0]), float(values[1]), float(step_x))
+                    valores_longitude = arange(float(values[2]), float(values[3]), float(step_y))
+                    valores_altura = arange(float(values[4]), float(values[5]), float(step_z))
+                    xGrid, yGrid, zGrid = meshgrid(valores_latitude,valores_longitude,valores_altura, indexing='ij')
+                    elevationPlot3d, azimutePlot3d = self.elevationPlot3d.displayText(), self.azimutePlot3d.displayText()
+                    color = self.colorPlot3d.currentText()
+                    self.axes3d.clear()
+                    self.canvas3d.draw()
+                    g = self.axes3d.scatter(xGrid, yGrid, zGrid, cmap = color, s= 10, label = layerName)
+                    self.axes3d.set_xlabel(lat, labelpad = 10)
+                    self.axes3d.set_ylabel(long, labelpad = 10)
+                    self.axes3d.set_zlabel(elev, labelpad = 10)
+                    self.axes3d.legend(loc='upper left')
+                    cbar = self.figure3d.colorbar(g, shrink=0.5, aspect=10)
+                    self.axes3d.view_init(azim=int(azimutePlot3d), elev=int(elevationPlot3d))
+                    self.canvas3d.draw()
+                if self.check_create_grid_table.isChecked():
+                    layerNewName = (layerName.split('.')[1]).lower()
+                    positions = stack((xGrid.ravel(), yGrid.ravel(), zGrid.ravel()), axis=1)
+                    srid = self.lineEditGridSRID.displayText()
+                    dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
+                    connectionGrid = dbf.connectDatabase(dictConnection)
+                    cursorGrid = connectionGrid.cursor()
+                    sql = ("""CREATE TABLE public.%s_grid_%s_%s_%s (grid_pk integer PRIMARY KEY, gridlatitude Numeric(10,4), gridlongitude Numeric(11,4), gridelevation Numeric(11,4), geom geometry(POINTZ,%s))""" % (layerNewName, step_x, step_y, step_z, srid))
+                    cursorGrid.execute(sql)
+                    connectionGrid.commit()
+                    w = 0
+                    entry = ''
+                    for point in range(len(positions)):
+                        try:
+                            t_id = str(int(w))
+                            t_x = str(round(positions[w][0],4))
+                            t_y = str(round(positions[w][1],4))
+                            t_z = str(round(positions[w][2],4))
+                            t_point = """ST_SetSRID(ST_MakePoint(%s,%s,%s),%s)""" % (t_x,t_y,t_z, srid)
+                            entry = entry + """(%s,%s,%s,%s,%s),""" % (t_id, t_x, t_y, t_z, t_point)
+                            w += 1
+                        except:
+                            w += 1
+                            pass
+                    entry = entry[0:-1]
+                    dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.displayText(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
+                    connectionGridInsert = dbf.connectDatabase(dictConnection)
+                    cursorGridInsert = connectionGridInsert.cursor()
+                    sql2 = ("""INSERT INTO public.%s_grid_%s_%s_%s VALUES %s""" % (layerNewName, step_x, step_y, step_z, entry))
+                    cursorGridInsert.execute(sql2)
+                    connectionGridInsert.commit()
+                    sql3 = ("""CREATE INDEX %s_grid_%s_%s_%s_geom_idx  ON public.%s_grid_%s_%s_%s USING GIST (geom);""" % (layerNewName, step_x, step_y, step_z, layerNewName, step_x, step_y, step_z))
+                    cursorGridInsert.execute(sql3)
+                    connectionGridInsert.commit()
+                    sql4 = ("GRANT ALL ON public.%s_grid_%s_%s_%s TO %s;" % (layerNewName, step_x, step_y, step_z, self.lineEditLogin.displayText()))
+                    cursorGridInsert.execute(sql4)
+                    connectionGridInsert.commit()
+                    connectionGridInsert.close()
         except Exception as error:
             print('Check function calculateGrid. Cannot execute function. Reason: %s.' % (error))
 
@@ -672,10 +691,13 @@ class gdeDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             gridIds = utils.useSelectionOneVariable(layerGrid, 'grid_pk', useSelection)
             layerName = self.majorityMapLayerComboBox.currentText()
             variable = self.majorityFieldComboBox.currentText()
-            dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connectionOne = dbf.connectDatabase(dictConnection)
-            connectionTwo = dbf.connectDatabase(dictConnection)
-            dbf.majority(connectionOne, connectionTwo, gridIds, layerName, variable, majorityDistance, gridName)
+            if layerName == '' or gridName == '' or variable == '' or majorityDistance == '':
+                self.messageBoxCreation('Prease select grid in Analisys Tab, set layer and majority distance in Functions 3D Tab.', 'Interpolate Majority')
+            else:
+                dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
+                connectionOne = dbf.connectDatabase(dictConnection)
+                connectionTwo = dbf.connectDatabase(dictConnection)
+                dbf.majority(connectionOne, connectionTwo, gridIds, layerName, variable, majorityDistance, gridName)
         except Exception as error:
             print('Check function interpolateMajority. Cannot execute function. Reason: %s.' % (error))
 
@@ -690,10 +712,13 @@ class gdeDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             gridIds = utils.useSelectionOneVariable(layerGrid, 'grid_pk', useSelection)
             layerName = self.majorityMapLayerComboBox.currentText()
             variable = self.majorityFieldComboBox.currentText()
-            dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
-            connectionOne = dbf.connectDatabase(dictConnection)
-            connectionTwo = dbf.connectDatabase(dictConnection)
-            dbf.idw(connectionOne, connectionTwo, gridIds, layerName, variable, majorityDistance, gridName, lineEditIdwNumberPoints)
+            if layerName == '' or gridName == '' or variable == '' or majorityDistance == '':
+                self.messageBoxCreation('Prease select grid in Analisys Tab, set layer and majority distance in Functions 3D Tab.', 'Interpolate Majority')
+            else:
+                dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
+                connectionOne = dbf.connectDatabase(dictConnection)
+                connectionTwo = dbf.connectDatabase(dictConnection)
+                dbf.idw(connectionOne, connectionTwo, gridIds, layerName, variable, majorityDistance, gridName, lineEditIdwNumberPoints)
         except Exception as error:
             print('Check function interpolateMajority. Cannot execute function. Reason: %s.' % (error))
 
