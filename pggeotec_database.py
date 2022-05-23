@@ -32,6 +32,10 @@ class databaseFunctions:
 # User methods                                                                       
 ############################################################################################################################################################################################
     def connectDatabase(dictConnection):
+        """Connect to the PostgreSQL database.
+            :param dictConnection: Dictionary {'user': User, 'password': Password, 'host': Host, 'port':Port, 'name':Database name}
+			:return: Instance of connection with the database
+		"""
         try:
             connection = psycopg2.connect(user = dictConnection['user'], password = dictConnection['password'], host = dictConnection['host'], port = dictConnection['port'], database = dictConnection['name'])
             return connection
@@ -39,6 +43,10 @@ class databaseFunctions:
             print('Check function databaseFunctions.connectDatabase. Cannot execute function. Reason %s.' % (error)) 
     
     def createExtension(connection):
+        """Create pggeotec extension and dependencies in PostgreSQL database.
+            :param connection: Instance of connection with the database
+			:return: No return
+		"""
         try:
             cursor = connection.cursor()
             sql = {'postgis': 'CREATE EXTENSION IF NOT EXISTS postgis;', 'sfcgal':'CREATE EXTENSION IF NOT EXISTS postgis_sfcgal;', 'pggeotec': 'CREATE EXTENSION IF NOT EXISTS pggeotec;'}
@@ -53,6 +61,10 @@ class databaseFunctions:
             print('Check function databaseFunctions.createExtenson. Cannot execute function. Reason %s.' % (error))
     
     def dropExtension(connection):
+        """Remove pggeotec extension and but not the dependencies in PostgreSQL database.
+            :param connection: Instance of connection with the database
+			:return: No return
+		"""
         try:
             cursor = connection.cursor()
             cursor.execute('DROP EXTENSION pggeotec;')
@@ -62,6 +74,10 @@ class databaseFunctions:
             print('Check function databaseFunctions.createExtenson. Cannot execute function. Reason %s.' % (error))
 
     def refreshMatviews(connection):
+        """Refresh Materialised views in PostgreSQL database.
+            :param connection: Instance of connection with the database
+			:return: No return
+		"""
         try:
             cursor = connection.cursor()
             sql = ('SELECT pggeotec.drop_matviews();')
@@ -72,6 +88,11 @@ class databaseFunctions:
             print('Check function databaseFunctions.refreshMatviews. Cannot execute function. Reason %s.' % (error)) 
 
     def executeExtensionFunctionNoParameters(connection, functionName):
+        """Execute any Extension Function with no parameters available in PostgreSQL database.
+            :param connection: Instance of connection with the database
+            :param functionName: Name of the function
+			:return: No return
+		"""
         try:
             cursor = connection.cursor()
             sql = ('SELECT pggeotec.%s();' % (functionName))
@@ -82,6 +103,12 @@ class databaseFunctions:
             print('Check function databaseFunctions.executeExtensionFunctionNoParameters. Cannot execute function. Reason %s.' % (error)) 
 
     def executeExtensionFunctionOneParameters(connection, functionName, parameterOne):
+        """Execute any Extension Function with one parameters available in PostgreSQL database.
+            :param connection: Instance of connection with the database
+            :param functionName: Name of the function
+            :param parameterOne: Parameter of the function
+			:return: No return
+		"""
         try:
             cursor = connection.cursor()
             sql = ("SELECT pggeotec.%s('%s');" % (functionName, parameterOne))
@@ -92,6 +119,12 @@ class databaseFunctions:
             print('Check function databaseFunctions.executeExtensionFunctionNoParameters. Cannot execute function. Reason %s.' % (error)) 
     
     def consolidationGenerateData(connection, identifier):
+        """Query for data about consolidation test available in PostgreSQL database to create a graphic.
+            :param connection: Instance of connection with the database
+            :param identifier: Name of the consolidation test identifier
+            :return variable_one: Pressure of of the consolidation test
+            :return variable_two: Void index
+		"""
         try:
             variable_one, variable_two = [], []
             query = ("SELECT adm_pressao, adm_ind_vaz FROM el.adensamento_medicao WHERE adm_ident = '%s' ORDER BY adm_pk" %(identifier))
@@ -107,6 +140,18 @@ class databaseFunctions:
             print ("databaseFunctions.consolidationGenerateData. Reason: %s" %(error))
     
     def granulometryGenerateData(connection, identifier):
+        """Query for data about granulometry test available in PostgreSQL database to create a graphic.
+            :param connection: Instance of connection with the database
+            :param identifier: Name of the granulometry test identifier
+            :return variable_one: Pressure of of the consolidation test
+            :return variable_two: Void index
+            :return g_teor_finos: Fine percentage
+            :return g_teor_gro: Coarse percentage
+            :return g_diam_efet: Efective diameter
+            :return g_coef_unif: Uniformity coeficient
+            :return g_coef_curv: Curvature coeficient
+            :return g_defloc: If uses or not defloculant
+		"""
         try:
             variable_one, variable_two = [], []
             g_teor_finos, g_teor_gro, g_diam_efet, g_coef_unif, g_coef_curv = 0,0,0,0,0
@@ -139,6 +184,11 @@ class databaseFunctions:
             print ("databaseFunctions.granulometryGenerateData. Reason: %s" %(error))
     
     def atterberbGenerateData(connection, identifier):
+        """Query for data about atterberg test available in PostgreSQL database to create a graphic.
+            :param connection: Instance of connection with the database
+            :param identifier: Name of the atterberg test identifier
+            :return dataframe: Dataframe with la_lp, la_limit_liq, la_ind_plast, la_arg_ativ available in PostgreSQL database 
+		"""
         try:
             query = ("SELECT la_lp, la_limit_liq, la_ind_plast, la_arg_ativ FROM el.atterberg WHERE la_ident = '%s';" %(identifier))
             dataframe = read_sql_query(query, connection)
@@ -148,6 +198,11 @@ class databaseFunctions:
             print ("databaseFunctions.atterberbGenerateData. Reason: %s" %(error))
 
     def compactacGenerateData(connection, identifier):
+        """Query for data about compactation test available in PostgreSQL database to create a graphic.
+            :param connection: Instance of connection with the database
+            :param identifier: Name of the compactation test identifier
+            :return dataframe: Dataframe with cm_umid_med, cm_densidade available in PostgreSQL database 
+		"""
         try:
             query = ("SELECT cm_umid_med, cm_densidade FROM el.compactacao_medicao WHERE cm_ident = '%s';" %(identifier))
             dataframe = read_sql_query(query, connection)
@@ -157,6 +212,11 @@ class databaseFunctions:
             print ("databaseFunctions.compactacGenerateData. Reason: %s" %(error))
 
     def iscGenerateData(connection, identifier):
+        """Query for data about California Bearing Ratio test available in PostgreSQL database to create a graphic.
+            :param connection: Instance of connection with the database
+            :param identifier: Name of the California Bearing Ratio  test identifier
+            :return dataframe: Dataframe with iscm_penet, iscm_pressao available in PostgreSQL database 
+		"""
         try:
             query = ("SELECT iscm_penet, iscm_pressao FROM el.isc_medicao WHERE iscm_ident = '%s' ORDER BY iscm_penet ASC;" %(identifier))
             dataframe = read_sql_query(query, connection)
@@ -166,6 +226,13 @@ class databaseFunctions:
             print ("databaseFunctions.iscGenerateData. Reason: %s" %(error))
     
     def piezometerGenerateData(connection, identifier):
+        """Query for data about piezometer available in PostgreSQL database to create a graphic.
+            :param connection: Instance of connection with the database
+            :param identifier: Name of the piezometer test identifier
+            :return dataframe: Dataframe with pz_data_med, pz_na_med available in PostgreSQL database
+            :return dataframe_chuvoso: Dataframe with pz_data_med, pz_na_med available in PostgreSQL database on wet season
+            :return dataframe_seco: Dataframe with pz_data_med, pz_na_med available in PostgreSQL database on dry season
+		"""
         try:
             query = ("SELECT pz_data_med, pz_na_med FROM ic.piezometro WHERE pz_ident = '%s' ORDER BY pz_data_med ASC;" %(identifier))
             query_chuvoso = ("SELECT pz_data_med, pz_na_med FROM ic.piezometro WHERE pz_ident = '%s' AND EXTRACT(MONTH FROM pz_data_med) >= 9 OR EXTRACT(MONTH FROM pz_data_med) <= 4 ORDER BY pz_data_med ASC;" %(identifier))
@@ -180,6 +247,18 @@ class databaseFunctions:
 
 
     def depthWetSPTGenerateData(connection, layer):
+        """Query for data about Wet SPT Generate Data available in PostgreSQL database to create a graphic.
+            :param connection: Instance of connection with the database
+            :param layer: Name of the layer of SPT to analize
+            :param profund: Depth where the SPT measures were made
+            :param minimo: Minimun value of SPT observed in depth param
+            :param q1: Q1 value of SPT observed in depth param
+            :param mediano: Median value of SPT observed in depth param
+            :param media: Mean value of SPT observed in depth param
+            :param q3: Q3 value of SPT observed in depth param
+            :param maximo: Maximun value of SPT observed in depth param
+			:return: No return
+		"""
         try:
             query_chuvoso = """
             WITH chuvoso AS (
@@ -222,6 +301,18 @@ class databaseFunctions:
             print ("databaseFunctions.depthWetSPTGenerateData. Reason: %s" % (error))
 
     def depthDrySPTGenerateData(connection, layer):
+        """Query for data about Dry SPT Generate Data available in PostgreSQL database to create a graphic.
+            :param connection: Instance of connection with the database
+            :param layer: Name of the layer of SPT to analize
+            :param profund: Depth where the SPT measures were made
+            :param minimo: Minimun value of SPT observed in depth param
+            :param q1: Q1 value of SPT observed in depth param
+            :param mediano: Median value of SPT observed in depth param
+            :param media: Mean value of SPT observed in depth param
+            :param q3: Q3 value of SPT observed in depth param
+            :param maximo: Maximun value of SPT observed in depth param
+			:return: No return
+		"""
         try:
             query_chuvoso = """
             WITH seco AS (
@@ -262,6 +353,18 @@ class databaseFunctions:
             print ("databaseFunctions.depthDrySPTGenerateData. Reason: %s" % (error))
             
     def depthSPTGenerateData(connection, layer):
+        """Query for data about SPT Generate Data available in PostgreSQL database to create a graphic.
+            :param connection: Instance of connection with the database
+            :param layer: Name of the layer of SPT to analize
+            :param profund: Depth where the SPT measures were made
+            :param minimo: Minimun value of SPT observed in depth param
+            :param q1: Q1 value of SPT observed in depth param
+            :param mediano: Median value of SPT observed in depth param
+            :param media: Mean value of SPT observed in depth param
+            :param q3: Q3 value of SPT observed in depth param
+            :param maximo: Maximun value of SPT observed in depth param
+			:return: No return
+		"""
         try:
             query = """
             WITH seco AS (
@@ -301,6 +404,16 @@ class databaseFunctions:
             print ("databaseFunctions.depthSPTGenerateData. Reason: %s" % (error))
 
     def majority(connectionOne, connectionTwo, gridIds, layerName, variable, majorityDistance, gridName):
+        """Interpolate a grid using majority algorithm.
+            :param connectionOne: Instance of connection with the database
+            :param connectionTwo: Instance of connection with the database
+            :param layerName: Name of the layer to analize
+            :param gridIds: Field with grid ids for iteration
+            :param variable: Variable for majority interpolation
+            :param majorityDistance: Distance of search for majority interpolation
+            :param gridName: Name of grid layer
+			:return: No return
+		"""
         try:
             cursorConnectionOne = connectionOne.cursor()
             sql_prepare = ("""ALTER TABLE %s ADD COLUMN IF NOT EXISTS %s Character varying(254)""" % (gridName, variable))
@@ -319,6 +432,17 @@ class databaseFunctions:
             connectionTwo.close()
     
     def idw(connectionOne, connectionTwo, gridIds, layerName, variable, majorityDistance, gridName, numberPoints):
+        """Interpolate a grid using idw algorithm.
+            :param connectionOne: Instance of connection with the database
+            :param connectionTwo: Instance of connection with the database
+            :param layerName: Name of the layer to analize
+            :param gridIds: Field with grid ids for iteration
+            :param variable: Variable for majority interpolation
+            :param majorityDistance: Distance of search for majority interpolation
+            :param gridName: Name of grid layer
+            :param numberPoints: Max number of point to use in interpolation
+			:return: No return
+		"""
         try:
             cursorConnectionOne = connectionOne.cursor()
             sql_prepare = ("""ALTER TABLE %s ADD COLUMN IF NOT EXISTS idw_%s Character varying(254)""" % (gridName, variable))
@@ -337,6 +461,15 @@ class databaseFunctions:
             connectionTwo.close()
 
     def recoverDataSPTOrigin(connection, layer, geociu):
+        """Query for data about SPT available in PostgreSQL database to create a graphic.
+            :param connection: Instance of connection with the database
+            :param layer: Name of the layer of SPT to analize
+            :param geociu: Unique code to search in the database
+            :return profund: Depth where the SPT measures were made 
+            :return var_spc_os_desc: Resistency of soils 
+            :return legend_origin_values: Geologic origin of soil (Legend)
+            :return legend_origin_text: Geologic origin of soil 
+		"""
         try:
             cursor_legend_origin = connection.cursor()
             cursor_legend_origin.execute("SELECT dm_os_pk, dm_os_desc FROM dom.tb_dom_origem_solo")
@@ -363,6 +496,17 @@ class databaseFunctions:
             print ("databaseFunctions.recoverDataSPTOrigin. Reason: %s" % (error))
     
     def recoverDataSPTTexture(connection, layer, geociu):
+        """Query for data about SPT available in PostgreSQL database to create a graphic.
+            :param connection: Instance of connection with the database
+            :param layer: Name of the layer of SPT to analize
+            :param geociu: Unique code to search in the database
+            :return profund: Depth where the SPT measures were made 
+            :return var_spc_text_prim: Primary texture of soil
+            :return var_spc_text_sec: Secondary texture of soil
+            :return var_spc_text_comp: Complemetary texture of soil
+            :return texture_values: Texture of soil (Legend)
+            :return texture_text: Texture of soil 
+		"""
         try:
             cursor_legend_texture = connection.cursor()
             cursor_legend_texture.execute("SELECT dm_text_pk, dm_text_desc FROM dom.tb_dom_textura_solo")

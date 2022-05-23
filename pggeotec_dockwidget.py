@@ -47,7 +47,7 @@ from matplotlib import pyplot
 from numpy import log, mean, std, amin, median, amax, var, percentile, sort, arange, zeros, meshgrid, stack
 
 ### Database
-from pandas import read_sql_query
+#from pandas import read_sql_query
 
 
 
@@ -799,7 +799,7 @@ class gdeDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         try:
             layer = utils.getVectorLayerByName(layer_receive_domain)
             cursor  = connection.cursor()
-            query = "SELECT %s, %s::integer FROM %s;" % (domain_desc, domain_pk, domain_table)
+            query = "SELECT %s, %s::integer FROM  %s;" % (domain_desc, domain_pk, domain_table)
             cursor.execute(query)
             domains = cursor.fetchall()
             domains_index = layer.fields().indexFromName(field_to_domain)
@@ -817,11 +817,14 @@ class gdeDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         try:
             dictConnection = {'user':self.lineEditLogin.displayText(), 'password':self.LineEditPassword.text(), 'host':self.lineEditLocalhost.displayText(), 'port':self.lineEditPort.displayText(), 'name':self.lineEditDatabase.displayText()}
             connection = dbf.connectDatabase(dictConnection)
+            cursor  = connection.cursor()
             table = self.layerAnalysisMapLayerComboBox.currentText()
-            query = ("SELECT esquema, tabela, coluna, tab_dom, chave_tb_dom, col_tb_dom FROM dom.tb_controle WHERE tabela = '%s'" % (table)) 
-            dataframe = read_sql_query(query, connection)
-            for row in range(dataframe.shape[0]):
-                 self.recuperarDominios (connection, dataframe.loc[row,'chave_tb_dom'], dataframe.loc[row,'col_tb_dom'], dataframe.loc[row,'tab_dom'], dataframe.loc[row,'tabela'], dataframe.loc[row,'coluna'])
+            query = ("""SELECT esquema, tabela, coluna, tab_dom, chave_tb_dom, col_tb_dom FROM dom.tb_controle WHERE tabela = '%s'""" % (table)) 
+            cursor.execute(query)
+            domains = cursor.fetchall()
+            for row in domains:
+                print(row)
+                self.recuperarDominios (connection, row[4], row[5], row[3], row[1], row[2])
             connection.commit()
         except Exception as error:
             print('Check function configureDomain. Cannot execute function. Reason: %s.' % (error))
